@@ -138,7 +138,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
           hx-post={`/rooms/${room.slug}/messages`}
           hx-target="#sseSink"
           hx-swap="beforeend"
-          hx-on:htmx:afterRequest="if(event.detail.successful){const t=this.querySelector('textarea[name=body]'); if(t){t.value=''; t.dispatchEvent(new Event('input'));}}"
+          hx-on:htmx:afterRequest="if(event.detail.successful){this.reset(); const t=this.querySelector('textarea[name=body]'); if(t){t.dispatchEvent(new Event('input'));}}"
         >
           <textarea
             name="body"
