@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 export async function getOrCreateLobby() {
   const existing = await db.select().from(rooms).where(eq(rooms.slug, "lobby")).limit(1);
-  if (existing) return existing;
+  if (existing.length > 0) return existing[0]!;
 
   const inserted = await db
     .insert(rooms)
