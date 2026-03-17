@@ -1,0 +1,53 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { setNickname, getOrSetClientId } from "../server/cookies";
+
+export const prerender = false;
+
+const error = Astro.url.searchParams.get("error");
+
+export async function POST({ request, cookies, redirect }: import("astro").APIContext) {
+  const form = await request.formData();
+  const nickname = String(form.get("nickname") ?? "").trim();
+  if (!nickname || nickname.length < 2 || nickname.length > 24) {
+    return redirect("/nick?error=Nickname%20must%20be%202-24%20chars");
+  }
+
+  getOrSetClientId(cookies);
+  setNickname(cookies, nickname);
+  return redirect("/rooms/lobby");
+}
+---
+
+<Layout title="Pick a nickname — Talkara">
+  <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-4 py-10">
+    <header class="flex flex-col gap-1">
+      <h1 class="text-2xl font-semibold tracking-tight">Pick a nickname</h1>
+      <p class="text-sm text-zinc-300">No passwords. Just jump into chat.</p>
+    </header>
+
+    <form method="post" class="flex flex-col gap-3">
+      <label class="text-sm font-medium text-zinc-200" for="nickname">Nickname</label>
+      <input
+        id="nickname"
+        name="nickname"
+        autocomplete="nickname"
+        maxlength="24"
+        minlength="2"
+        required
+        class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none ring-0 focus:border-zinc-600"
+        placeholder="Alex"
+      />
+
+      {error ? <p class="text-sm text-red-300">{error}</p> : null}
+
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
+      >
+        Continue
+      </button>
+    </form>
+  </main>
+</Layout>
+

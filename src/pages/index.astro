@@ -1,0 +1,29 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getNickname } from "../server/cookies";
+
+export const prerender = false;
+
+const nickname = getNickname(Astro.cookies);
+if (nickname) {
+	return Astro.redirect("/rooms/lobby");
+}
+---
+
+<Layout title="Talkara">
+	<main class="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 py-10">
+		<header class="flex flex-col gap-2">
+			<h1 class="text-2xl font-semibold tracking-tight">Talkara</h1>
+			<p class="text-sm text-zinc-300">
+				Multi-room chat with Astro SSR, HTMX, SSE, and Postgres.
+			</p>
+		</header>
+
+		<a
+			href="/nick"
+			class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
+		>
+			Enter the Lobby
+		</a>
+	</main>
+</Layout>

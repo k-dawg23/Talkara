@@ -1,0 +1,30 @@
+{
+  "name": "talkara",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@astrojs/node": "^10.0.2",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^6.0.5",
+    "drizzle-orm": "^0.45.1",
+    "htmx-ext-sse": "^2.2.4",
+    "htmx.org": "^2.0.8",
+    "pg": "^8.20.0",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.10"
+  }
+}

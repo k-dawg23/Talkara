@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: talkara
+      POSTGRES_PASSWORD: talkara
+      POSTGRES_DB: talkara
+    ports:
+      - "5432:5432"
+    volumes:
+      - talkara_pgdata:/var/lib/postgresql/data
+
+volumes:
+  talkara_pgdata:
+
