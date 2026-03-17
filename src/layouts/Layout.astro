@@ -17,8 +17,11 @@ const { title = "Talkara" } = Astro.props;
     <slot />
 
     <script type="module">
-      import "htmx.org";
+      import htmx from "htmx.org";
       import "htmx-ext-sse";
+
+      window.htmx = htmx;
+      htmx.process(document.body);
     </script>
   </body>
 </html>
