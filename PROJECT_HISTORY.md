@@ -77,3 +77,12 @@ This file is updated at the end of each phase to record what changed, how to run
 - Improved chat composer UX (Enter to send, Shift+Enter for newline).
 - Ensured SSE message swaps append to the message list and presence/typing updates apply via out-of-band swaps.
 
+## Phase 6 — GitHub repo creation + linking (completed 2026-03-17)
+
+### Steps taken
+- Initialized a new git repository in `Talkara/`.
+- Created a public GitHub repository and pushed `main`.
+
+### Repo
+- `https://github.com/k-dawg23/Talkara`
+
