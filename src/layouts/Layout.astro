@@ -16,13 +16,9 @@ const { title = "Talkara" } = Astro.props;
   <body class="h-full bg-zinc-950 text-zinc-100">
     <slot />
 
-    <script type="module">
-      import htmx from "htmx.org";
-      import "htmx-ext-sse";
-
-      window.htmx = htmx;
-      htmx.process(document.body);
-    </script>
+    <!-- Load HTMX and SSE extension as global scripts for maximum browser compatibility -->
+    <script src="https://unpkg.com/htmx.org@2.0.8"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.4/sse.js"></script>
   </body>
 </html>
 
