@@ -37,7 +37,11 @@ const oldest = initialMessages[0]?.createdAt ?? null;
 ---
 
 <Layout title={`${room.name} — Talkara`}>
-  <div class="flex min-h-screen flex-col bg-zinc-950">
+  <div
+    class="flex min-h-screen flex-col bg-zinc-950"
+    hx-ext="sse"
+    sse-connect={`/rooms/${room.slug}/stream`}
+  >
     <header class="sticky top-0 z-10 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur">
       <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <div class="min-w-0">
@@ -55,7 +59,13 @@ const oldest = initialMessages[0]?.createdAt ?? null;
             <div class="text-sm font-semibold">Rooms</div>
           </div>
 
-          <ul class="flex flex-col gap-1">
+          <ul
+            id="roomsList"
+            class="flex flex-col gap-1"
+            hx-get={`/rooms/list?current=${encodeURIComponent(room.slug)}`}
+            hx-trigger="load, sse:roomsUpdated"
+            hx-swap="innerHTML"
+          >
             {rooms.map((r) => (
               <li>
                 <a
@@ -127,8 +137,6 @@ const oldest = initialMessages[0]?.createdAt ?? null;
         <div
           id="sseSink"
           class="hidden"
-          hx-ext="sse"
-          sse-connect={`/rooms/${room.slug}/stream`}
           sse-swap="message"
           hx-swap="beforeend"
         ></div>

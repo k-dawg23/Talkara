@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { createRoom, getOrCreateLobby } from "../../server/rooms";
 import { getNickname } from "../../server/cookies";
+import { broadcastAll } from "../../server/hub";
 
 export const prerender = false;
 
@@ -17,6 +18,7 @@ export const POST: APIRoute = async ({ request, redirect, cookies }) => {
   }
 
   const room = await createRoom(name);
+  broadcastAll({ type: "roomsUpdated", html: "1" });
   return redirect(`/rooms/${room.slug}`);
 };
 

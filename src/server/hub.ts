@@ -3,7 +3,8 @@ import { EventEmitter } from "node:events";
 type RoomEvent =
   | { type: "message"; html: string }
   | { type: "presence"; html: string }
-  | { type: "typing"; html: string };
+  | { type: "typing"; html: string }
+  | { type: "roomsUpdated"; html: string };
 
 type Listener = (evt: RoomEvent) => void;
 
@@ -44,5 +45,11 @@ export function subscribe(roomId: string, listener: Listener): () => void {
 export function broadcast(roomId: string, evt: RoomEvent) {
   const room = getRoom(roomId);
   for (const listener of room.listeners) listener(evt);
+}
+
+export function broadcastAll(evt: RoomEvent) {
+  for (const room of rooms.values()) {
+    for (const listener of room.listeners) listener(evt);
+  }
 }
 
