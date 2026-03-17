@@ -17,12 +17,12 @@ export function renderMessageLi(opts: {
 }): string {
   const kind = opts.kind ?? "user";
   if (kind === "system") {
-    return `<li class="my-2 text-center text-xs text-zinc-500">${escapeHtml(opts.body)}</li>`;
+    return `<li hx-swap-oob="beforeend:#messages" class="my-2 text-center text-xs text-zinc-500">${escapeHtml(opts.body)}</li>`;
   }
 
   const time = (opts.createdAt ?? new Date()).toISOString();
   return `
-<li class="group my-2 flex gap-3">
+<li hx-swap-oob="beforeend:#messages" class="group my-2 flex gap-3">
   <div class="min-w-0 flex-1">
     <div class="flex items-baseline gap-2">
       <div class="text-sm font-semibold text-zinc-100">${escapeHtml(opts.nickname)}</div>

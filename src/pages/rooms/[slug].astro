@@ -105,10 +105,6 @@ const oldest = initialMessages[0]?.createdAt ?? null;
         <ol
           id="messages"
           class="flex-1 overflow-y-auto px-3 py-3"
-          hx-ext="sse"
-          sse-connect={`/rooms/${room.slug}/stream`}
-          sse-swap="message"
-          hx-swap="beforeend"
         >
           <li
             id="historySentinel"
@@ -127,6 +123,15 @@ const oldest = initialMessages[0]?.createdAt ?? null;
             ))
           )}
         </ol>
+
+        <div
+          id="sseSink"
+          class="hidden"
+          hx-ext="sse"
+          sse-connect={`/rooms/${room.slug}/stream`}
+          sse-swap="message"
+          hx-swap="beforeend"
+        ></div>
 
         <form
           class="flex items-end gap-2 border-t border-zinc-900 p-3"
