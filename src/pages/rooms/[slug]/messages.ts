@@ -37,10 +37,13 @@ export const POST: APIRoute = async ({ params, request, cookies, redirect }) => 
 
   broadcast(room.id, { type: "message", html });
 
-  return new Response(null, {
-    status: 204,
+  // Return the rendered message as an OOB swap so the sender sees it immediately
+  // even if their SSE connection is delayed.
+  return new Response(html, {
+    status: 200,
     headers: {
       "HX-Trigger": "messageSent",
+      "Content-Type": "text/html; charset=utf-8",
     },
   });
 };

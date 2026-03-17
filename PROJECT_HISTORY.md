@@ -86,3 +86,6 @@ This file is updated at the end of each phase to record what changed, how to run
 ### Repo
 - `https://github.com/k-dawg23/Talkara`
 
+## Notes / future improvements
+- **Broadcast room list changes**: when a room is created, broadcast an SSE event that swaps the rooms list in all connected tabs (so new rooms appear without refresh).
+
