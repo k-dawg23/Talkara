@@ -134,6 +134,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
         ></div>
 
         <form
+          id="composerForm"
           class="flex items-end gap-2 border-t border-zinc-900 p-3"
           hx-post={`/rooms/${room.slug}/messages`}
           hx-target="#sseSink"
@@ -142,6 +143,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
           hx-on:htmx:afterRequest="if(event.detail.successful){this.reset(); const t=this.querySelector('textarea[name=body]'); if(t){t.dispatchEvent(new Event('input'));}}"
         >
           <textarea
+            id="composerInput"
             name="body"
             rows="1"
             required

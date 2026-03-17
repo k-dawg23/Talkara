@@ -37,9 +37,11 @@ export const POST: APIRoute = async ({ params, request, cookies, redirect }) => 
 
   broadcast(room.id, { type: "message", html });
 
+  const clear = `<script hx-swap-oob="true">try{const t=document.getElementById('composerInput'); if(t){t.value=''; t.dispatchEvent(new Event('input',{bubbles:true})); t.focus();}}catch(e){}</script>`;
+
   // Return the rendered message as an OOB swap so the sender sees it immediately
   // even if their SSE connection is delayed.
-  return new Response(html, {
+  return new Response(html + clear, {
     status: 200,
     headers: {
       "HX-Trigger": "messageSent",
