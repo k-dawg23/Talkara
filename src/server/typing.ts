@@ -6,7 +6,13 @@ type TypingEntry = {
   expiresAtMs: number;
 };
 
-const byRoom = new Map<string, Map<string, TypingEntry>>();
+const globalKey = "__talkaraTyping__";
+const byRoom: Map<string, Map<string, TypingEntry>> = (
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] as Map<string, Map<string, TypingEntry>> ?? new Map<string, Map<string, TypingEntry>>();
+(
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] = byRoom;
 
 function getRoom(roomId: string) {
   const existing = byRoom.get(roomId);

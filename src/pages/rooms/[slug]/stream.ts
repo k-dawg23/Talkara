@@ -31,12 +31,22 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
+      let closed = false;
+
+      const safeEnqueue = (text: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(text));
+        } catch {
+          // connection likely closed
+        }
+      };
 
       const unsubscribe = subscribe(room.id, (evt) => {
-        controller.enqueue(encoder.encode(sseEvent(evt.type, evt.html)));
+        safeEnqueue(sseEvent(evt.type, evt.html));
       });
 
-      controller.enqueue(encoder.encode(`event: ready\ndata: ok\n\n`));
+      safeEnqueue(`event: ready\ndata: ok\n\n`);
 
       // Join: update presence + broadcast presence + system message
       presenceJoin(room.id, clientId, nickname);
@@ -54,10 +64,12 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
 
       // Keepalive ping to prevent proxies closing connection
       const interval = setInterval(() => {
-        controller.enqueue(encoder.encode(`event: ping\ndata: ${Date.now()}\n\n`));
+        safeEnqueue(`event: ping\ndata: ${Date.now()}\n\n`);
       }, 15000);
 
       const cleanup = async () => {
+        if (closed) return;
+        closed = true;
         clearInterval(interval);
         unsubscribe();
         presenceLeave(room.id, clientId);
@@ -72,10 +84,17 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
           room.id,
           { type: "message", html: renderMessageLi({ nickname: leaveInserted[0]!.nickname, body: leaveInserted[0]!.body, createdAt: leaveInserted[0]!.createdAt, kind: "system" }) },
         );
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // ignore
+        }
       };
 
       if (signal) signal.addEventListener("abort", cleanup, { once: true });
+    },
+    cancel() {
+      // best-effort cleanup happens via abort handler above
     },
   });
 

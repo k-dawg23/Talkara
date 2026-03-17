@@ -8,7 +8,13 @@ type PresenceEntry = {
 
 type RoomPresence = Map<string, PresenceEntry>;
 
-const byRoom = new Map<string, RoomPresence>();
+const globalKey = "__talkaraPresence__";
+const byRoom: Map<string, RoomPresence> = (
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] as Map<string, RoomPresence> ?? new Map<string, RoomPresence>();
+(
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] = byRoom;
 
 function getRoom(roomId: string): RoomPresence {
   const existing = byRoom.get(roomId);

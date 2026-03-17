@@ -12,7 +12,14 @@ type RoomState = {
   listeners: Set<Listener>;
 };
 
-const rooms = new Map<string, RoomState>();
+const globalKey = "__talkaraRoomHub__";
+const rooms: Map<string, RoomState> = (
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] as Map<string, RoomState> ?? new Map<string, RoomState>();
+
+(
+  globalThis as unknown as Record<string, unknown>
+)[globalKey] = rooms;
 
 function getRoom(roomId: string): RoomState {
   const existing = rooms.get(roomId);
