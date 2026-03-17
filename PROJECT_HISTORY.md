@@ -40,7 +40,7 @@ This file is updated at the end of each phase to record what changed, how to run
 ### Notes
 - Next phases will add real chat UI, room routes, SSE stream endpoints, persistence, history pagination, presence, typing, and GitHub repo linking.
 
-## Phase 1 — Core rooms + persisted messaging (in progress)
+## Phase 1 — Core rooms + persisted messaging (completed 2026-03-17)
 
 ### Steps taken (so far)
 - Started Postgres via Docker Compose and applied Drizzle migrations.
@@ -71,7 +71,7 @@ This file is updated at the end of each phase to record what changed, how to run
 - Added in-memory typing TTL store and `POST /rooms/:slug/typing` endpoint.
 - Client pings typing status from the composer; server broadcasts a live “is typing…” indicator via SSE.
 
-## Phase 5 — Polish + robustness (in progress)
+## Phase 5 — Polish + robustness (completed 2026-03-17)
 
 ### Steps taken (so far)
 - Improved chat composer UX (Enter to send, Shift+Enter for newline).
@@ -87,5 +87,28 @@ This file is updated at the end of each phase to record what changed, how to run
 - `https://github.com/k-dawg23/Talkara`
 
 ## Notes / future improvements
-- **Broadcast room list changes**: when a room is created, broadcast an SSE event that swaps the rooms list in all connected tabs (so new rooms appear without refresh).
+- (none currently tracked here)
+
+## Post-plan fixes & enhancements (completed 2026-03-17)
+
+### Reliability / correctness fixes
+- Fixed `/nick` submission by moving POST handling to a dedicated endpoint (`POST /api/nick`) and updating the form `action` accordingly.
+- Fixed a Lobby auto-create bug that could cause infinite redirects when the Lobby row was missing.
+- Improved local dev startup:
+  - `DATABASE_URL` now defaults to the docker-compose Postgres URL in non-production when unset (still required in production).
+
+### Realtime delivery fixes
+- Stabilized in-memory realtime state in dev by storing hub/presence/typing maps on `globalThis` so POST handlers and SSE handlers share the same broadcasters.
+- Switched SSE delivery to use `hx-swap-oob` fragments for messages/presence/typing, routed through a hidden SSE sink element to avoid swap-target ambiguity.
+- Fixed HTMX loading failures by bundling vendor scripts locally:
+  - Added `public/vendor/htmx.min.js` and `public/vendor/htmx-sse.min.js`
+  - Updated the layout to load them from `/vendor/...` and marked them `is:inline` to avoid Astro/Vite dev bundling errors.
+
+### UX improvements
+- Composer clear behavior fixed so the message submits first, then the textarea clears (delayed clear).
+
+### Live room list updates (implemented)
+- Implemented **room list broadcasting**:
+  - On room creation, server broadcasts an SSE `roomsUpdated` event to all connected tabs.
+  - Tabs refresh the rooms list via `GET /rooms/list?current=<slug>` with `hx-trigger="sse:roomsUpdated"` (no refresh needed).
 
