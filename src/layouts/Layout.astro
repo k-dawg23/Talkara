@@ -17,8 +17,8 @@ const { title = "Talkara" } = Astro.props;
     <slot />
 
     <!-- Load HTMX and SSE extension as global scripts for maximum browser compatibility -->
-    <script src="https://unpkg.com/htmx.org@2.0.8"></script>
-    <script src="https://unpkg.com/htmx-ext-sse@2.2.4/sse.js"></script>
+    <script src="/vendor/htmx.min.js"></script>
+    <script src="/vendor/htmx-sse.min.js"></script>
     <script>
       // If these aren't present, realtime won't work; fail loudly in console.
       if (!window.htmx) console.error("Talkara: HTMX failed to load");
