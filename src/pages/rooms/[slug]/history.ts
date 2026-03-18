@@ -10,10 +10,10 @@ export const prerender = false;
 
 function sentinel(opts: { roomSlug: string; beforeIso: string | null; text: string }) {
   if (!opts.beforeIso) {
-    return `<li id="historySentinel" class="py-2 text-center text-xs text-zinc-500">${opts.text}</li>`;
+    return `<li id="historySentinel" class="py-2 text-center text-xs text-tc-300">${opts.text}</li>`;
   }
   const href = `/rooms/${opts.roomSlug}/history?before=${encodeURIComponent(opts.beforeIso)}&limit=50`;
-  return `<li id="historySentinel" class="py-2 text-center text-xs text-zinc-500" hx-get="${href}" hx-trigger="revealed" hx-swap="outerHTML">${opts.text}</li>`;
+  return `<li id="historySentinel" class="py-2 text-center text-xs text-tc-300" hx-get="${href}" hx-trigger="revealed" hx-swap="outerHTML">${opts.text}</li>`;
 }
 
 export const GET: APIRoute = async ({ params, url, cookies, redirect }) => {

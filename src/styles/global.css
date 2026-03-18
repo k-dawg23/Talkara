@@ -1,1 +1,78 @@
 @import "tailwindcss";
+
+@theme {
+  /* talkara_classic — palette derived from logo gradient (#1f9be3 → #f3fc41) and text (#0e5278 / #0d2736) */
+  --color-tc-50: #e4f0f8;
+  --color-tc-100: #c0dcea;
+  --color-tc-200: #8bb8d4;
+  --color-tc-300: #5a93b5;
+  --color-tc-400: #3aade8;
+  --color-tc-500: #1f9be3;
+  --color-tc-600: #1876b0;
+  --color-tc-700: #0e5278;
+  --color-tc-800: #0d2736;
+  --color-tc-900: #091c2a;
+  --color-tc-950: #05111b;
+
+  --color-accent: #f3fc41;
+  --color-accent-dim: #cdd42e;
+  --color-accent-bright: #f7fd80;
+}
+
+/* ─── Responsive chat grid ───
+   mobile  : single column, tab-switched
+   md 768  : 2 columns  — rooms + chat (online below rooms)
+   lg 1024 : 3 columns  — rooms + chat + online
+*/
+
+.chat-grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .chat-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  .chat-grid > .grid-rooms {
+    grid-column: 1;
+    grid-row: 1;
+    border-right: 1px solid var(--color-tc-800);
+  }
+  .chat-grid > .grid-chat {
+    grid-column: 2;
+    grid-row: 1 / -1;
+  }
+  .chat-grid > .grid-online {
+    grid-column: 1;
+    grid-row: 2;
+    border-top: 1px solid var(--color-tc-800);
+    border-right: 1px solid var(--color-tc-800);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-grid {
+    grid-template-columns: 260px 1fr 220px;
+    grid-template-rows: 1fr;
+  }
+  .chat-grid > .grid-rooms {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .chat-grid > .grid-chat {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .chat-grid > .grid-online {
+    grid-column: 3;
+    grid-row: 1;
+    border-top: none;
+    border-right: none;
+    border-left: 1px solid var(--color-tc-800);
+  }
+}

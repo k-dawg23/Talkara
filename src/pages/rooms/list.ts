@@ -15,9 +15,9 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     .map((r) => {
       const cls =
         r.slug === current
-          ? "bg-zinc-900 text-white"
-          : "text-zinc-300";
-      return `<li><a href="/rooms/${r.slug}" class="block rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-900 ${cls}">${r.name}</a></li>`;
+          ? "bg-tc-700 text-tc-50"
+          : "text-tc-200";
+      return `<li><a href="/rooms/${r.slug}" class="block rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-tc-800 ${cls}">${r.name}</a></li>`;
     })
     .join("");
 
