@@ -11,19 +11,28 @@ if (nickname) {
 ---
 
 <Layout title="Talkara">
-	<main class="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-4 py-10">
-		<header class="flex flex-col gap-2">
-			<h1 class="text-2xl font-semibold tracking-tight">Talkara</h1>
-			<p class="text-sm text-zinc-300">
-				Multi-room chat with Astro SSR, HTMX, SSE, and Postgres.
-			</p>
-		</header>
+	<main class="relative flex min-h-screen flex-col items-center justify-center px-4 py-10">
+		<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+			<div class="absolute -left-1/4 top-0 h-[60%] w-[60%] rounded-full bg-tc-500/10 blur-3xl"></div>
+			<div class="absolute -right-1/4 bottom-0 h-[50%] w-[50%] rounded-full bg-accent/5 blur-3xl"></div>
+		</div>
 
-		<a
-			href="/nick"
-			class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
-		>
-			Enter the Lobby
-		</a>
+		<div class="relative z-10 flex w-full max-w-sm flex-col items-center gap-8">
+			<img src="/logo.svg" alt="Talkara" class="h-24 w-24 rounded-2xl shadow-2xl shadow-tc-500/20" />
+
+			<div class="flex flex-col gap-2 text-center">
+				<h1 class="text-3xl font-bold tracking-tight text-tc-50">Talkara</h1>
+				<p class="text-sm text-tc-200">
+					Multi-room chat powered by Astro, HTMX, SSE, and Postgres.
+				</p>
+			</div>
+
+			<a
+				href="/nick"
+				class="inline-flex items-center justify-center rounded-lg bg-tc-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-tc-500/25 transition-colors hover:bg-tc-400"
+			>
+				Enter the Lobby
+			</a>
+		</div>
 	</main>
 </Layout>

@@ -38,78 +38,79 @@ const oldest = initialMessages[0]?.createdAt ?? null;
 
 <Layout title={`${room.name} — Talkara`}>
   <div
-    class="flex min-h-screen flex-col bg-zinc-950"
+    id="chatApp"
+    data-active-tab="chat"
+    class="flex h-screen flex-col bg-tc-950"
     hx-ext="sse"
     sse-connect={`/rooms/${room.slug}/stream`}
   >
-    <header class="sticky top-0 z-10 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur">
-      <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <div class="min-w-0">
-          <div class="text-xs text-zinc-400">Room</div>
-          <div class="truncate text-base font-semibold">{room.name}</div>
-        </div>
-        <a href="/nick" class="text-sm text-zinc-300 hover:text-white">Change nickname</a>
+    <!-- ─── Header ─── -->
+    <header class="flex shrink-0 items-center gap-3 border-b border-tc-800 bg-tc-900/80 px-4 py-2.5 backdrop-blur">
+      <a href="/rooms/lobby" class="shrink-0">
+        <img src="/logo.svg" alt="Talkara" class="h-8 w-8 rounded-lg" />
+      </a>
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-base font-semibold text-tc-50">{room.name}</div>
       </div>
+      <a href="/nick" class="shrink-0 text-sm text-tc-200 transition-colors hover:text-tc-50">
+        Change nick
+      </a>
     </header>
 
-    <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-4 lg:flex-row">
-      <aside class="order-2 w-full lg:order-1 lg:w-64">
-        <div class="rounded-xl border border-zinc-900 bg-zinc-950 p-3">
-          <div class="mb-2 flex items-center justify-between">
-            <div class="text-sm font-semibold">Rooms</div>
-          </div>
+    <!-- ─── Content grid ─── -->
+    <div class="chat-grid">
 
-          <ul
-            id="roomsList"
-            class="flex flex-col gap-1"
-            hx-get={`/rooms/list?current=${encodeURIComponent(room.slug)}`}
-            hx-trigger="load, sse:roomsUpdated"
-            hx-swap="innerHTML"
+      <!-- LEFT SIDEBAR: Rooms -->
+      <aside
+        class="grid-rooms hidden flex-col overflow-y-auto bg-tc-900 p-3 md:flex"
+        data-tab-panel="rooms"
+      >
+        <div class="mb-2 text-sm font-semibold text-tc-100">Rooms</div>
+
+        <ul
+          id="roomsList"
+          class="flex flex-col gap-1"
+          hx-get={`/rooms/list?current=${encodeURIComponent(room.slug)}`}
+          hx-trigger="load, sse:roomsUpdated"
+          hx-swap="innerHTML"
+        >
+          {rooms.map((r) => (
+            <li>
+              <a
+                href={`/rooms/${r.slug}`}
+                class:list={[
+                  "block rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-tc-800",
+                  r.slug === room.slug ? "bg-tc-700 text-tc-50" : "text-tc-200",
+                ]}
+              >
+                {r.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <form method="post" action="/rooms" class="mt-3 flex gap-2">
+          <input
+            name="name"
+            required
+            maxlength="32"
+            class="min-w-0 flex-1 rounded-lg border border-tc-700 bg-tc-950 px-2 py-1.5 text-sm text-tc-50 outline-none transition-colors placeholder:text-tc-300 focus:border-tc-500"
+            placeholder="New room"
+          />
+          <button
+            class="rounded-lg bg-tc-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-tc-400"
+            type="submit"
           >
-            {rooms.map((r) => (
-              <li>
-                <a
-                  href={`/rooms/${r.slug}`}
-                  class:list={[
-                    "block rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-900",
-                    r.slug === room.slug ? "bg-zinc-900 text-white" : "text-zinc-300",
-                  ]}
-                >
-                  {r.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <form method="post" action="/rooms" class="mt-3 flex gap-2">
-            <input
-              name="name"
-              required
-              maxlength="32"
-              class="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-zinc-100 outline-none focus:border-zinc-600"
-              placeholder="New room"
-            />
-            <button
-              class="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
-              type="submit"
-            >
-              Create
-            </button>
-          </form>
-        </div>
-
-        <div class="mt-3 rounded-xl border border-zinc-900 bg-zinc-950 p-3">
-          <div id="presence">
-            <div class="mb-2 text-sm font-semibold">Online</div>
-            <div class="text-xs text-zinc-500">Loading…</div>
-          </div>
-        </div>
+            Create
+          </button>
+        </form>
       </aside>
 
-      <section class="order-1 flex min-h-[60vh] w-full flex-1 flex-col rounded-xl border border-zinc-900 bg-zinc-950 lg:order-2">
+      <!-- CENTER: Chat -->
+      <section class="grid-chat flex flex-col overflow-hidden" data-tab-panel="chat">
         <div
           id="typing"
-          class="h-8 px-3 py-2 text-xs text-zinc-400"
+          class="h-8 shrink-0 px-3 py-2 text-xs text-tc-300"
         ></div>
 
         <ol
@@ -118,7 +119,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
         >
           <li
             id="historySentinel"
-            class="py-2 text-center text-xs text-zinc-500"
+            class="py-2 text-center text-xs text-tc-300"
             hx-get={`/rooms/${room.slug}/history?before=${encodeURIComponent(oldest ? oldest.toISOString() : new Date().toISOString())}&limit=50`}
             hx-trigger="revealed"
             hx-swap="outerHTML"
@@ -126,7 +127,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
             {oldest ? "Load older messages…" : "No history yet"}
           </li>
           {initialMessages.length === 0 ? (
-            <li class="text-sm text-zinc-500">No messages yet.</li>
+            <li class="text-sm text-tc-300">No messages yet.</li>
           ) : (
             initialMessages.map((m) => (
               <Fragment set:html={renderMessageLi({ nickname: m.nickname, body: m.body, createdAt: m.createdAt, kind: m.kind })} />
@@ -143,7 +144,7 @@ const oldest = initialMessages[0]?.createdAt ?? null;
 
         <form
           id="composerForm"
-          class="flex items-end gap-2 border-t border-zinc-900 p-3"
+          class="flex shrink-0 items-end gap-2 border-t border-tc-800 p-3"
           hx-post={`/rooms/${room.slug}/messages`}
           hx-target="#sseSink"
           hx-swap="beforeend"
@@ -157,22 +158,88 @@ const oldest = initialMessages[0]?.createdAt ?? null;
             rows="1"
             required
             maxlength="2000"
-            class="min-h-[44px] flex-1 resize-none rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-600"
-            placeholder="Message as {nickname}…"
+            class="min-h-[44px] flex-1 resize-none rounded-lg border border-tc-700 bg-tc-950 px-3 py-2 text-sm text-tc-50 outline-none transition-colors placeholder:text-tc-300 focus:border-tc-500"
+            placeholder={`Message as ${nickname}…`}
             hx-post={`/rooms/${room.slug}/typing`}
             hx-trigger="keyup changed delay:400ms"
             hx-swap="none"
             hx-on:keydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); this.form.requestSubmit();}"
           ></textarea>
           <button
-            class="h-[44px] rounded-lg bg-white px-4 text-sm font-medium text-zinc-900 hover:bg-zinc-100"
+            class="h-[44px] rounded-lg bg-tc-500 px-4 text-sm font-medium text-white transition-colors hover:bg-tc-400"
             type="submit"
           >
             Send
           </button>
         </form>
       </section>
-    </main>
-  </div>
-</Layout>
 
+      <!-- RIGHT SIDEBAR: Online -->
+      <aside
+        class="grid-online hidden flex-col overflow-y-auto bg-tc-900 p-3 md:flex"
+        data-tab-panel="online"
+      >
+        <div id="presence">
+          <div class="mb-2 text-sm font-semibold text-tc-100">Online</div>
+          <div class="text-xs text-tc-300">Loading…</div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- ─── Mobile bottom tabs ─── -->
+    <nav class="flex shrink-0 border-t border-tc-800 bg-tc-900 md:hidden">
+      <button data-tab-btn="chat" class="flex-1 py-3 text-center text-xs font-medium text-accent transition-colors">
+        Chat
+      </button>
+      <button data-tab-btn="rooms" class="flex-1 py-3 text-center text-xs font-medium text-tc-300 transition-colors">
+        Rooms
+      </button>
+      <button data-tab-btn="online" class="flex-1 py-3 text-center text-xs font-medium text-tc-300 transition-colors">
+        Online
+      </button>
+    </nav>
+  </div>
+
+  <!-- Mobile tab switching -->
+  <script is:inline>
+    (function() {
+      var app = document.getElementById('chatApp');
+      if (!app) return;
+
+      function isMobile() { return window.innerWidth < 768; }
+
+      function switchTab(tab) {
+        app.dataset.activeTab = tab;
+
+        app.querySelectorAll('[data-tab-btn]').forEach(function(btn) {
+          var active = btn.dataset.tabBtn === tab;
+          btn.className = 'flex-1 py-3 text-center text-xs font-medium transition-colors ' +
+            (active ? 'text-accent border-t-2 border-accent' : 'text-tc-300');
+        });
+
+        if (!isMobile()) return;
+        app.querySelectorAll('[data-tab-panel]').forEach(function(panel) {
+          panel.style.display = (panel.dataset.tabPanel === tab) ? 'flex' : 'none';
+        });
+      }
+
+      app.querySelectorAll('[data-tab-btn]').forEach(function(btn) {
+        btn.addEventListener('click', function() { switchTab(btn.dataset.tabBtn); });
+      });
+
+      var timer;
+      window.addEventListener('resize', function() {
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+          app.querySelectorAll('[data-tab-panel]').forEach(function(p) {
+            p.style.display = '';
+          });
+          if (isMobile()) switchTab(app.dataset.activeTab || 'chat');
+        }, 100);
+      });
+
+      if (isMobile()) switchTab('chat');
+    })();
+  </script>
+</Layout>

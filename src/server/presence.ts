@@ -48,14 +48,16 @@ export function renderPresenceOob(roomId: string): string {
 
   const items =
     names.length === 0
-      ? `<div class="text-xs text-zinc-500">No one online</div>`
-      : `<ul class="flex flex-col gap-1">${names
-          .map((n) => `<li class="truncate text-sm text-zinc-200">${escapeHtml(n)}</li>`)
+      ? `<div class="text-xs text-tc-300">No one online</div>`
+      : `<ul class="flex flex-col gap-1.5">${names
+          .map(
+            (n) =>
+              `<li class="flex items-center gap-2 truncate text-sm text-tc-100"><span class="inline-block h-2 w-2 shrink-0 rounded-full bg-green-400"></span>${escapeHtml(n)}</li>`,
+          )
           .join("")}</ul>`;
 
   return `<div id="presence" hx-swap-oob="innerHTML">
-  <div class="mb-2 text-sm font-semibold">Online</div>
+  <div class="mb-2 text-sm font-semibold text-tc-100">Online <span class="ml-1 text-xs font-normal text-tc-300">${names.length}</span></div>
   ${items}
 </div>`;
 }
-
