@@ -52,6 +52,12 @@ const oldest = initialMessages[0]?.createdAt ?? null;
       <div class="min-w-0 flex-1">
         <div class="truncate text-base font-semibold text-tc-50">{room.name}</div>
       </div>
+      <button
+        id="themeToggle"
+        onclick="toggleTheme()"
+        class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+        aria-label="Toggle theme"
+      ></button>
       <a href="/nick" class="shrink-0 text-sm text-tc-200 transition-colors hover:text-tc-50">
         Change nick
       </a>

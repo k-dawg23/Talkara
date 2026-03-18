@@ -15,6 +15,13 @@ const { title = "Talkara" } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
+    <script is:inline>
+      (function(){
+        try { var t = localStorage.getItem('talkara-theme'); } catch(e) { var t = null; }
+        if (!t) t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'classic';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
   </head>
   <body class="h-full bg-tc-950 text-tc-50">
     <slot />
@@ -23,6 +30,28 @@ const { title = "Talkara" } = Astro.props;
     <script src="/vendor/htmx-sse.min.js" is:inline></script>
     <script is:inline>
       if (!window.htmx) console.error("Talkara: HTMX failed to load");
+
+      (function(){
+        var SUN = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+        var MOON = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+        function update() {
+          var isLight = document.documentElement.dataset.theme === 'light';
+          var btn = document.getElementById('themeToggle');
+          if (!btn) return;
+          btn.innerHTML = isLight ? MOON : SUN;
+          btn.title = isLight ? 'Switch to classic' : 'Switch to light';
+        }
+
+        window.toggleTheme = function() {
+          var next = document.documentElement.dataset.theme === 'light' ? 'classic' : 'light';
+          document.documentElement.dataset.theme = next;
+          try { localStorage.setItem('talkara-theme', next); } catch(e) {}
+          update();
+        };
+
+        update();
+      })();
     </script>
   </body>
 </html>

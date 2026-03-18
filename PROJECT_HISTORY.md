@@ -124,6 +124,34 @@ This file is updated at the end of each phase to record what changed, how to run
 | `src/pages/rooms/list.ts` | `tc-*` active/inactive room styles |
 | `src/pages/rooms/[slug]/history.ts` | `tc-*` sentinel classes |
 
+## talkara_light theme & theme switching (completed 2026-03-18)
+
+### Light palette
+- Created **talkara_light** by adding a `[data-theme="light"]` rule in `global.css` that overrides every `--color-tc-*` and `--color-accent*` custom property.
+- Backgrounds inverted: `tc-950` → `#f0f6fb` (page bg), `tc-900` → `#ffffff` (panels), `tc-800` → `#c4d9e8` (borders).
+- Text inverted: `tc-50` → `#0d2736` (primary text), `tc-100` → `#1a3a50` (headings), `tc-200` → `#3d6a82` (secondary).
+- Primary blue (`tc-500`) stays at `#1f9be3`; hover darkens (`tc-400` → `#1684c7`) instead of lightening for better contrast on white.
+- Accent changed from bright yellow-green to a contrast-safe dark gold (`#8a7d00`) so active tab indicators and highlights remain legible on light backgrounds.
+
+### Theme switching mechanism
+- **Blocking `<head>` script** in `Layout.astro` reads the saved theme from `localStorage` (or falls back to `prefers-color-scheme`) and sets `data-theme` on `<html>` before first paint — no flash of wrong theme.
+- **`toggleTheme()` global function** flips between `classic` and `light`, updates `data-theme`, persists to `localStorage`, and swaps the toggle icon.
+- **Toggle button** placed in the room page header (between room name and "Change nick") and in the top-right corner of both login pages. Uses Lucide-style inline SVG: sun icon in classic mode, moon icon in light mode.
+
+### How it works (CSS only, no server changes)
+- The `@theme` block defines classic (dark) values as defaults on `:root`.
+- The `[data-theme="light"]` selector overrides those same CSS custom properties with light values.
+- All Tailwind utility classes (`bg-tc-950`, `text-tc-50`, `border-tc-800`, etc.) reference `var(--color-tc-*)`, so they automatically reflect the active theme — zero changes needed in server-rendered HTML fragments.
+
+### Files changed (5)
+| File | Change |
+|------|--------|
+| `src/styles/global.css` | `[data-theme="light"]` overrides for all `tc-*` and `accent` tokens |
+| `src/layouts/Layout.astro` | Blocking theme-init script in `<head>`, `toggleTheme()` + icon logic at end of `<body>` |
+| `src/pages/index.astro` | Theme toggle button (top-right) |
+| `src/pages/nick.astro` | Theme toggle button (top-right) |
+| `src/pages/rooms/[slug].astro` | Theme toggle button in header |
+
 ## Notes / future improvements
 - (none currently tracked here)
 

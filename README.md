@@ -1,12 +1,31 @@
-## Talkara
+<p align="center">
+  <img src="public/logo.svg" alt="Talkara" width="120" height="120" />
+</p>
 
-Multi-room live chat using **Astro SSR + HTMX + SSE + Postgres + Drizzle**, styled with **Tailwind CSS**.
+<h1 align="center">Talkara</h1>
+
+<p align="center">
+  Multi-room live chat using <strong>Astro SSR + HTMX + SSE + Postgres + Drizzle</strong>, styled with <strong>Tailwind CSS</strong>.
+</p>
+
+## Themes
+
+Talkara ships with two switchable themes derived from the logo colour palette:
+
+| Theme | Description |
+|-------|-------------|
+| **talkara_classic** | Dark navy backgrounds with bright blue accents and yellow-green highlights — the default. |
+| **talkara_light** | Light, airy backgrounds with the same brand blue and a contrast-safe dark gold accent. |
+
+Toggle between them using the sun/moon button in the page header (or top-right on login screens). The choice is saved to `localStorage` and respected on reload. First-time visitors get the theme matching their OS `prefers-color-scheme` setting.
 
 ## Requirements
+
 - Node.js (see `package.json` engines)
 - Docker + Docker Compose (recommended for Postgres)
 
 ## Setup
+
 From the `Talkara/` directory:
 
 1. Start Postgres:
@@ -27,8 +46,10 @@ From the `Talkara/` directory:
 Astro dev server runs at `http://localhost:4321` by default.
 
 ## Useful scripts
+
 - `npm run db:generate` — generate SQL migrations from `src/db/schema.ts`
 - `npm run db:migrate` — apply migrations to the configured `DATABASE_URL`
 
 ## Project log
+
 See `PROJECT_HISTORY.md` for a phase-by-phase record of what was built and why.
