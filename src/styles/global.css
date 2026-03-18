@@ -19,6 +19,25 @@
   --color-accent-bright: #f7fd80;
 }
 
+/* ─── talkara_light — inverted palette for light backgrounds ─── */
+[data-theme="light"] {
+  --color-tc-50: #0d2736;
+  --color-tc-100: #1a3a50;
+  --color-tc-200: #3d6a82;
+  --color-tc-300: #5a7f96;
+  --color-tc-400: #1684c7;
+  --color-tc-500: #1f9be3;
+  --color-tc-600: #1876b0;
+  --color-tc-700: #b0c8db;
+  --color-tc-800: #c4d9e8;
+  --color-tc-900: #ffffff;
+  --color-tc-950: #f0f6fb;
+
+  --color-accent: #8a7d00;
+  --color-accent-dim: #6b6100;
+  --color-accent-bright: #ab9d00;
+}
+
 /* ─── Responsive chat grid ───
    mobile  : single column, tab-switched
    md 768  : 2 columns  — rooms + chat (online below rooms)
