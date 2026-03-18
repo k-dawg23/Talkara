@@ -86,6 +86,44 @@ This file is updated at the end of each phase to record what changed, how to run
 ### Repo
 - `https://github.com/k-dawg23/Talkara`
 
+## talkara_classic theme & responsive layout (completed 2026-03-18)
+
+### Theme
+- Derived a full **talkara_classic** color palette from the logo SVG gradient (`#1f9be3` blue → `#f3fc41` yellow-green) and text fills (`#0e5278`, `#0d2736`).
+- Registered the palette as a Tailwind v4 `@theme` in `src/styles/global.css` — 11-stop scale (`tc-50` through `tc-950`) plus `accent`, `accent-dim`, and `accent-bright`.
+- Replaced all `zinc-*` / `bg-white` utility classes with `tc-*` tokens across pages, server-rendered HTML fragments (messages, room list, history sentinel, presence, typing), and the shared layout.
+- Added `import "../styles/global.css"` to `Layout.astro` so the theme and grid styles are actually loaded.
+
+### Logo usage
+- **Login pages** (`index.astro`, `nick.astro`): full-size logo (`h-24 w-24`) centered above the form, with a subtle shadow glow and gradient orb background.
+- **Room page** (`rooms/[slug].astro`): small logo (`h-8 w-8`) in the header bar, linking back to the lobby.
+
+### Responsive layout (based on Layout_Ideas.odt)
+- **Desktop (≥ 1024 px)**: 3-column CSS Grid — rooms sidebar (260 px) | chat (fluid) | online sidebar (220 px).
+- **Tablet (768–1023 px)**: 2-column CSS Grid — rooms + online stacked in left column (240 px) | chat (fluid).
+- **Mobile (< 768 px)**: single-view with a **bottom tab bar** (Chat / Rooms / Online) for panel switching; active tab highlighted with the `accent` color.
+- Grid rules live in `global.css` using `.chat-grid` / `.grid-rooms` / `.grid-chat` / `.grid-online` classes with `@media` breakpoints.
+
+### Presence panel enhancements
+- Each online user now shows a green dot status indicator.
+- Online count displayed next to the "Online" heading.
+
+### PR
+- Merged via [PR #1](https://github.com/k-dawg23/Talkara/pull/1) (`feature/talkara-classic-theme` → `main`).
+
+### Files changed (9)
+| File | Change |
+|------|--------|
+| `src/styles/global.css` | `@theme` tokens + responsive `.chat-grid` CSS |
+| `src/layouts/Layout.astro` | CSS import, `tc-*` body colors, favicon link |
+| `src/pages/index.astro` | Full-size logo, gradient orbs, themed button |
+| `src/pages/nick.astro` | Full-size logo, themed form/inputs |
+| `src/pages/rooms/[slug].astro` | 3-col grid layout, mobile tabs, small header logo |
+| `src/server/render.ts` | `zinc-*` → `tc-*` in message HTML |
+| `src/server/presence.ts` | Green dots, online count, `tc-*` classes |
+| `src/pages/rooms/list.ts` | `tc-*` active/inactive room styles |
+| `src/pages/rooms/[slug]/history.ts` | `tc-*` sentinel classes |
+
 ## Notes / future improvements
 - (none currently tracked here)
 
