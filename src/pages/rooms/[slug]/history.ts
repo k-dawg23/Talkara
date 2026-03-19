@@ -3,7 +3,7 @@ import { db } from "../../../db/client";
 import { messages } from "../../../db/schema";
 import { getNickname } from "../../../server/cookies";
 import { getRoomBySlug } from "../../../server/rooms";
-import { and, eq, lt, desc } from "drizzle-orm";
+import { and, eq, lt, desc, ne } from "drizzle-orm";
 import { renderMessageLi } from "../../../server/render";
 
 export const prerender = false;
@@ -39,7 +39,7 @@ export const GET: APIRoute = async ({ params, url, cookies, redirect }) => {
   const rows = await db
     .select()
     .from(messages)
-    .where(and(eq(messages.roomId, room.id), lt(messages.createdAt, beforeDate)))
+    .where(and(eq(messages.roomId, room.id), lt(messages.createdAt, beforeDate), ne(messages.kind, "system")))
     .orderBy(desc(messages.createdAt))
     .limit(limit);
 

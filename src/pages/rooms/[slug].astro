@@ -4,7 +4,7 @@ import { getNickname, getOrSetClientId } from "../../server/cookies";
 import { getOrCreateLobby, getRoomBySlug, listRooms } from "../../server/rooms";
 import { db } from "../../db/client";
 import { messages } from "../../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, ne } from "drizzle-orm";
 import { renderMessageLi } from "../../server/render";
 
 export const prerender = false;
@@ -29,7 +29,7 @@ const rooms = await listRooms();
 const recent = await db
   .select()
   .from(messages)
-  .where(eq(messages.roomId, room.id))
+  .where(and(eq(messages.roomId, room.id), ne(messages.kind, "system")))
   .orderBy(desc(messages.createdAt))
   .limit(50);
 const initialMessages = [...recent].reverse();
