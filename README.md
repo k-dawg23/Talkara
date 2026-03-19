@@ -50,6 +50,15 @@ Astro dev server runs at `http://localhost:4321` by default.
 - `npm run db:generate` — generate SQL migrations from `src/db/schema.ts`
 - `npm run db:migrate` — apply migrations to the configured `DATABASE_URL`
 
+## Features
+
+- **Multi-room chat** — Create rooms, join any room, and chat in real-time
+- **Live presence** — See who's online in each room with green status indicators
+- **Typing indicators** — Know when someone is typing
+- **Theme switching** — Toggle between talkara_classic (dark) and talkara_light themes
+- **Logout** — Click Logout in the header to return to the nickname picker
+- **Responsive layout** — Works on desktop, tablet, and mobile with adaptive sidebars
+
 ## Project log
 
 See `PROJECT_HISTORY.md` for a phase-by-phase record of what was built and why.

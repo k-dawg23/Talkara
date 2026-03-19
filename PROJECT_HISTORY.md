@@ -152,6 +152,18 @@ This file is updated at the end of each phase to record what changed, how to run
 | `src/pages/nick.astro` | Theme toggle button (top-right) |
 | `src/pages/rooms/[slug].astro` | Theme toggle button in header |
 
+## Recent fixes & features (2026-03-18)
+
+### Logout feature
+- Added `POST /api/logout` endpoint that clears `nickname` and `clientId` cookies and redirects to `/nick`
+- Added **Logout** button to room page header (next to "Change nick")
+
+### Presence deduplication fix
+- Fixed duplicate usernames appearing in online list after logout/reconnect
+- Added stale entry cleanup (30-second threshold) to remove ghost entries
+- On `presenceJoin`, remove existing entries with same nickname before adding new entry
+- Deduplicate nicknames when rendering presence list to ensure each user appears only once
+
 ## Notes / future improvements
 - (none currently tracked here)
 
