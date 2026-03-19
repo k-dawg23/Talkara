@@ -164,6 +164,12 @@ This file is updated at the end of each phase to record what changed, how to run
 - On `presenceJoin`, remove existing entries with same nickname before adding new entry
 - Deduplicate nicknames when rendering presence list to ensure each user appears only once
 
+### Message dates and history filtering (completed 2026-03-18)
+- Added visible dates to all messages showing relative date (Today/Yesterday/Date) + time
+- Filtered out system join/leave messages from history queries
+- Rationale: presence panel already shows current users, making old join/leave messages redundant
+- Files changed: `src/server/render.ts`, `src/pages/rooms/[slug].astro`, `src/pages/rooms/[slug]/history.ts`
+
 ## Notes / future improvements
 - (none currently tracked here)
 
