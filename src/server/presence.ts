@@ -1,5 +1,7 @@
 import { escapeHtml } from "./render";
 
+const STALE_THRESHOLD_MS = 30000; // 30 seconds
+
 type PresenceEntry = {
   clientId: string;
   nickname: string;
@@ -24,8 +26,26 @@ function getRoom(roomId: string): RoomPresence {
   return map;
 }
 
+function cleanupStale(roomId: string) {
+  const room = getRoom(roomId);
+  const now = Date.now();
+  for (const [clientId, entry] of room.entries()) {
+    if (now - entry.lastSeenMs > STALE_THRESHOLD_MS) {
+      room.delete(clientId);
+    }
+  }
+}
+
 export function presenceJoin(roomId: string, clientId: string, nickname: string) {
   const room = getRoom(roomId);
+  // Remove any stale entries first
+  cleanupStale(roomId);
+  // Remove any existing entries with the same nickname to prevent duplicates
+  for (const [existingClientId, entry] of room.entries()) {
+    if (entry.nickname === nickname && existingClientId !== clientId) {
+      room.delete(existingClientId);
+    }
+  }
   room.set(clientId, { clientId, nickname, lastSeenMs: Date.now() });
 }
 
@@ -41,8 +61,16 @@ export function presenceTouch(roomId: string, clientId: string) {
 }
 
 export function renderPresenceOob(roomId: string): string {
+  cleanupStale(roomId);
   const room = getRoom(roomId);
+  // Deduplicate nicknames while preserving order
+  const seen = new Set<string>();
   const names = Array.from(room.values())
+    .filter((p) => {
+      if (seen.has(p.nickname)) return false;
+      seen.add(p.nickname);
+      return true;
+    })
     .map((p) => p.nickname)
     .sort((a, b) => a.localeCompare(b));
 
