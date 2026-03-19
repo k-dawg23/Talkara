@@ -69,6 +69,17 @@ const oldest = initialMessages[0]?.createdAt ?? null;
           Logout
         </button>
       </form>
+      {room.slug !== "lobby" && (
+        <form method="post" action={`/rooms/${room.slug}/delete`} class="shrink-0" onsubmit="return confirm('Delete this room?');">
+          <button
+            type="submit"
+            class="rounded-lg p-1.5 text-sm text-red-400 transition-colors hover:bg-red-900/30 hover:text-red-300"
+            title="Delete room"
+          >
+            Delete
+          </button>
+        </form>
+      )}
     </header>
 
     <!-- ─── Content grid ─── -->
@@ -254,6 +265,12 @@ const oldest = initialMessages[0]?.createdAt ?? null;
       });
 
       if (isMobile()) switchTab('chat');
+
+      // Focus the chat input on page load
+      const composerInput = document.getElementById('composerInput');
+      if (composerInput) {
+        composerInput.focus();
+      }
     })();
   </script>
 </Layout>

@@ -45,3 +45,14 @@ export async function createRoom(name: string) {
   return inserted[0]!;
 }
 
+export async function deleteRoomBySlug(slug: string): Promise<boolean> {
+  // Prevent deleting the Lobby
+  if (slug === "lobby") return false;
+  
+  const room = await getRoomBySlug(slug);
+  if (!room) return false;
+  
+  await db.delete(rooms).where(eq(rooms.id, room.id));
+  return true;
+}
+
