@@ -61,6 +61,14 @@ const oldest = initialMessages[0]?.createdAt ?? null;
       <a href="/nick" class="shrink-0 text-sm text-tc-200 transition-colors hover:text-tc-50">
         Change nick
       </a>
+      <form method="post" action="/api/logout" class="shrink-0">
+        <button
+          type="submit"
+          class="rounded-lg p-1.5 text-sm text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+        >
+          Logout
+        </button>
+      </form>
     </header>
 
     <!-- ─── Content grid ─── -->
