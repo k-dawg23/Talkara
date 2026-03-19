@@ -170,6 +170,16 @@ This file is updated at the end of each phase to record what changed, how to run
 - Rationale: presence panel already shows current users, making old join/leave messages redundant
 - Files changed: `src/server/render.ts`, `src/pages/rooms/[slug].astro`, `src/pages/rooms/[slug]/history.ts`
 
+### Auto-focus and room deletion (completed 2026-03-18)
+- Chat input automatically focused when joining a room (via inline script)
+- Added room deletion feature:
+  - `deleteRoomBySlug()` function in `src/server/rooms.ts` (Lobby protected from deletion)
+  - `POST /rooms/:slug/delete` endpoint in `src/pages/rooms/[slug]/delete.ts`
+  - Delete button in room header (only shown for non-Lobby rooms)
+  - Confirmation dialog before deletion
+  - Broadcasts `roomsUpdated` event after deletion to refresh all clients
+- Files changed: `src/server/rooms.ts`, `src/pages/rooms/[slug]/delete.ts`, `src/pages/rooms/[slug].astro`
+
 ## Notes / future improvements
 - (none currently tracked here)
 

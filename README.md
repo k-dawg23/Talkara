@@ -57,6 +57,8 @@ Astro dev server runs at `http://localhost:4321` by default.
 - **Typing indicators** — Know when someone is typing
 - **Theme switching** — Toggle between talkara_classic (dark) and talkara_light themes
 - **Logout** — Click Logout in the header to return to the nickname picker
+- **Delete rooms** — Delete any room (except Lobby) from the room header
+- **Auto-focus input** — Chat input is automatically focused when joining a room
 - **Responsive layout** — Works on desktop, tablet, and mobile with adaptive sidebars
 
 ## Project log
