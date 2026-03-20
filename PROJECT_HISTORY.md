@@ -166,9 +166,7 @@ This file is updated at the end of each phase to record what changed, how to run
 
 ### Message dates and history filtering (completed 2026-03-18)
 - Added visible dates to all messages showing relative date (Today/Yesterday/Date) + time
-- Filtered out system join/leave messages from history queries
-- Rationale: presence panel already shows current users, making old join/leave messages redundant
-- Files changed: `src/server/render.ts`, `src/pages/rooms/[slug].astro`, `src/pages/rooms/[slug]/history.ts`
+- Filtered out system join/leave messages from **initial load** and **history** (`GET …/history`) queries — old join/leave are not shown when loading or scrolling; the presence panel shows who’s online. **Live** join/leave for connected users still appears via SSE.
 
 ### Auto-focus and room deletion (completed 2026-03-18)
 - Chat input automatically focused when joining a room (via inline script)
@@ -203,8 +201,27 @@ This file is updated at the end of each phase to record what changed, how to run
 - **Fix**: Call `presenceTouch(roomId, clientId)` on each SSE keepalive ping (`stream.ts`, same interval as `ping`).
 
 ### Duplicate message for sender (fix 2026-03-20)
-- **Bug**: The sender saw each new line twice: `POST /messages` returns HTML with `hx-swap-oob` to `#messages`, and the same HTML was broadcast over SSE to all tabs including the sender’s — second OOB append.
+- **Bug**: The sender saw each new line twice: `POST /messages` returned the same fragment that was broadcast over SSE — duplicate append to `#messages`.
 - **Fix**: `RoomEvent` message payloads may include `excludeClientId`; the SSE subscriber in `stream.ts` skips those events when `excludeClientId === clientId`. `messages.ts` passes the poster’s `clientId` from cookies.
+
+## Message grouping (completed 2026-03-20)
+
+### Behaviour
+- Consecutive **user** messages from the **same nickname** render as a group: the **first** message shows a circular **avatar** (first letter of nickname), **name**, **timestamp**, and body; **continuations** hide the avatar (keeps column width) and meta row via `.message-continue` and CSS in `global.css`.
+- A **system** message (join/leave, etc.) or a **different** user breaks the group **when that line is present in the DOM** (see below).
+- **Initial load** and **history** queries **exclude** persisted system messages (same policy as pre-grouping): scrollback is user-only; old join/leave stay hidden. Grouping uses consecutive **user** rows in those result sets.
+- **Live** join/leave still inserted via SSE and appears between messages; they break groups and `regroupMessages()` keeps classes correct.
+- **New message** (`POST /messages`): continuation uses the previous **persisted** row in the room (`id` &lt; new message), including system rows in the DB — so a join/leave stored between two chats from the same user still prevents a false continuation on the server.
+- `regroupMessages()` in the room page script (debounced on `#messages` child-list mutations + `htmx:afterSwap` for history) keeps grouping correct when older user messages are prepended.
+
+### Note (2026-03-20)
+- Restored filtering system messages from initial/history after a brief period of showing them for grouping-only reasons — presence panel + live SSE cover join/leave relevance.
+
+### Realtime grouping (fix 2026-03-20)
+- **Issue**: `regroupMessages()` ran synchronously from `MutationObserver` / `htmx:afterSettle` before HTMX finished applying **out-of-band** swaps into `#messages` from SSE (`htmx:sseMessage` / swap on `#sseSink`) and POST responses, so continuation classes were wrong until full reload.
+- **Fix (first pass)**: Coalesced `scheduleRegroup()` via `setTimeout(0)` + `requestAnimationFrame`, plus listeners on `htmx:afterSwap`, `htmx:sseMessage`, and `htmx:afterSettle` — still raced the OOB pipeline.
+- **Fix (second pass)**: Run `regroupMessages()` **only** on **`htmx:oobAfterSwap`** when `evt.detail.target.id === 'messages'` — still wrong for live inserts because chat rows were not reliably going through that path.
+- **Fix (third pass)**: Stop using `hx-swap-oob` on chat `<li>` in `renderMessageLi`. Put `sse-swap="message"` + `hx-swap="beforeend"` on `#messages` and `hx-target="#messages"` on the composer so POST and SSE append the same plain fragment as SSR. Presence/typing still use OOB to their panels. Client: debounced `regroupMessages()` on direct children of `#messages` and `htmx:afterSwap` when target is `#messages` or `#historySentinel`. Trim nicknames when comparing authors (server + client).
 
 ## Notes / future improvements
 - (none currently tracked here)
@@ -219,7 +236,7 @@ This file is updated at the end of each phase to record what changed, how to run
 
 ### Realtime delivery fixes
 - Stabilized in-memory realtime state in dev by storing hub/presence/typing maps on `globalThis` so POST handlers and SSE handlers share the same broadcasters.
-- Switched SSE delivery to use `hx-swap-oob` fragments for messages/presence/typing, routed through a hidden SSE sink element to avoid swap-target ambiguity.
+- Message HTML appends directly into `#messages` (`beforeend`); presence/typing SSE payloads still use `hx-swap-oob` into `#presence` / `#typing`. (Earlier experiments used a hidden SSE sink + OOB for chat rows; that was replaced for reliable grouping.)
 - Fixed HTMX loading failures by bundling vendor scripts locally:
   - Added `public/vendor/htmx.min.js` and `public/vendor/htmx-sse.min.js`
   - Updated the layout to load them from `/vendor/...` and marked them `is:inline` to avoid Astro/Vite dev bundling errors.

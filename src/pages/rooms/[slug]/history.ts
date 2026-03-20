@@ -4,7 +4,7 @@ import { messages } from "../../../db/schema";
 import { getNickname } from "../../../server/cookies";
 import { getRoomBySlug } from "../../../server/rooms";
 import { and, eq, lt, desc, ne } from "drizzle-orm";
-import { renderMessageLi } from "../../../server/render";
+import { renderMessageLi, isUserMessageContinuation } from "../../../server/render";
 
 export const prerender = false;
 
@@ -43,9 +43,19 @@ export const GET: APIRoute = async ({ params, url, cookies, redirect }) => {
     .orderBy(desc(messages.createdAt))
     .limit(limit);
 
-  const html = rows
-    .reverse()
-    .map((m) => renderMessageLi({ nickname: m.nickname, body: m.body, createdAt: m.createdAt, kind: m.kind }))
+  const chronological = [...rows].reverse();
+  const html = chronological
+    .map((m, i) => {
+      const prev = i > 0 ? chronological[i - 1] : null;
+      const continuation = m.kind === "user" ? isUserMessageContinuation(prev ?? undefined, m) : false;
+      return renderMessageLi({
+        nickname: m.nickname,
+        body: m.body,
+        createdAt: m.createdAt,
+        kind: m.kind,
+        continuation,
+      });
+    })
     .join("");
 
   if (rows.length === 0) {
