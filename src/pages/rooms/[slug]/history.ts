@@ -1,9 +1,10 @@
 import type { APIRoute } from "astro";
 import { db } from "../../../db/client";
 import { messages } from "../../../db/schema";
-import { getNickname } from "../../../server/cookies";
+import { getClientId, getNickname, getOrSetClientId } from "../../../server/cookies";
 import { getRoomBySlug } from "../../../server/rooms";
 import { and, eq, lt, desc, ne } from "drizzle-orm";
+import { getAvatarColorForDisplay } from "../../../server/presence";
 import { renderMessageLi, isUserMessageContinuation } from "../../../server/render";
 
 export const prerender = false;
@@ -19,6 +20,9 @@ function sentinel(opts: { roomSlug: string; beforeIso: string | null; text: stri
 export const GET: APIRoute = async ({ params, url, cookies, redirect }) => {
   const nickname = getNickname(cookies);
   if (!nickname) return redirect("/nick");
+
+  getOrSetClientId(cookies);
+  const viewerClientId = getClientId(cookies);
 
   const slug = params.slug!;
   const room = await getRoomBySlug(slug);
@@ -54,6 +58,14 @@ export const GET: APIRoute = async ({ params, url, cookies, redirect }) => {
         createdAt: m.createdAt,
         kind: m.kind,
         continuation,
+        ...(m.kind === "user"
+          ? {
+              avatarBg: getAvatarColorForDisplay(room.id, m.nickname, {
+                viewerClientId: viewerClientId ?? undefined,
+                viewerNickname: nickname,
+              }),
+            }
+          : {}),
       });
     })
     .join("");

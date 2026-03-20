@@ -1,11 +1,12 @@
 ---
 import { Fragment } from "astro/jsx-runtime";
 import Layout from "../../layouts/Layout.astro";
-import { getNickname, getOrSetClientId } from "../../server/cookies";
+import { getClientId, getNickname, getOrSetClientId } from "../../server/cookies";
 import { getOrCreateLobby, getRoomBySlug, listRooms } from "../../server/rooms";
 import { db } from "../../db/client";
 import { messages } from "../../db/schema";
 import { eq, desc, and, ne } from "drizzle-orm";
+import { getAvatarColorForDisplay } from "../../server/presence";
 import { renderMessageLi, isUserMessageContinuation } from "../../server/render";
 
 export const prerender = false;
@@ -16,6 +17,7 @@ if (!nickname) {
 }
 
 getOrSetClientId(Astro.cookies);
+const viewerClientId = getClientId(Astro.cookies);
 
 await getOrCreateLobby();
 
@@ -173,7 +175,23 @@ const oldest = initialMessages[0]?.createdAt ?? null;
               const prev = i > 0 ? initialMessages[i - 1] : null;
               const continuation = m.kind === "user" ? isUserMessageContinuation(prev ?? undefined, m) : false;
               return (
-                <Fragment set:html={renderMessageLi({ nickname: m.nickname, body: m.body, createdAt: m.createdAt, kind: m.kind, continuation })} />
+                <Fragment
+                  set:html={renderMessageLi({
+                    nickname: m.nickname,
+                    body: m.body,
+                    createdAt: m.createdAt,
+                    kind: m.kind,
+                    continuation,
+                    ...(m.kind === "user"
+                      ? {
+                          avatarBg: getAvatarColorForDisplay(room.id, m.nickname, {
+                            viewerClientId: viewerClientId ?? undefined,
+                            viewerNickname: nickname,
+                          }),
+                        }
+                      : {}),
+                  })}
+                />
               );
             })
           )}

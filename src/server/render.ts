@@ -1,3 +1,5 @@
+import { getAvatarColorForNickname } from "./avatar-colors";
+
 export function escapeHtml(s: string): string {
   return s
     .replaceAll("&", "&amp;")
@@ -80,6 +82,11 @@ export function renderMessageLi(opts: {
   kind?: "user" | "system";
   /** Same author as previous user message (no system in between). */
   continuation?: boolean;
+  /**
+   * Fill colour for the avatar circle. Live messages should pass the session colour (see `getOrAssignSessionAvatarColor`).
+   * When omitted, a stable hash of the nickname is used (history / SSR).
+   */
+  avatarBg?: string;
 }): string {
   const kind = opts.kind ?? "user";
   const createdAt = opts.createdAt ?? new Date();
@@ -95,10 +102,12 @@ export function renderMessageLi(opts: {
   const continuation = opts.continuation ?? false;
   const letter = escapeHtml(avatarLetter(opts.nickname));
   const groupClass = continuation ? "message-user message-continue" : "message-user message-start";
+  const avatarBg = opts.avatarBg ?? getAvatarColorForNickname(opts.nickname);
+  const avatarStyle = `background-color:${escapeHtmlAttr(avatarBg)}`;
 
   return `
 <li class="${groupClass} flex gap-3" data-author="${authorAttr}">
-  <div class="message-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tc-700 text-xs font-semibold text-tc-50" aria-hidden="true">${letter}</div>
+  <div class="message-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white" style="${avatarStyle}" aria-hidden="true">${letter}</div>
   <div class="min-w-0 flex-1">
     <div class="message-meta flex flex-wrap items-baseline gap-2">
       <span class="text-sm font-semibold text-tc-50">${escapeHtml(opts.nickname)}</span>

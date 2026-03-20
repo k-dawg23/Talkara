@@ -4,6 +4,7 @@ import { messages } from "../../../db/schema";
 import { getClientId, getNickname } from "../../../server/cookies";
 import { getRoomBySlug } from "../../../server/rooms";
 import { broadcast } from "../../../server/hub";
+import { getAvatarColorForDisplay } from "../../../server/presence";
 import { renderMessageLi } from "../../../server/render";
 import { and, desc, eq, lt } from "drizzle-orm";
 
@@ -47,15 +48,20 @@ export const POST: APIRoute = async ({ params, request, cookies, redirect }) => 
     prev.nickname.trim() === msg.nickname.trim()
   );
 
+  const clientId = getClientId(cookies);
+  const avatarBg = getAvatarColorForDisplay(room.id, msg.nickname, {
+    viewerClientId: clientId ?? undefined,
+    viewerNickname: nickname,
+  });
+
   const html = renderMessageLi({
     nickname: msg.nickname,
     body: msg.body,
     createdAt: msg.createdAt,
     kind: "user",
     continuation,
+    avatarBg,
   });
-
-  const clientId = getClientId(cookies);
   broadcast(room.id, {
     type: "message",
     html,
