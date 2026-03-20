@@ -40,6 +40,9 @@ const oldest = initialMessages[0]?.createdAt ?? null;
   <div
     id="chatApp"
     data-active-tab="chat"
+    data-chat-nickname={nickname}
+    data-room-slug={room.slug}
+    data-room-name={room.name}
     class="flex h-screen flex-col bg-tc-950"
     hx-ext="sse"
     sse-connect={`/rooms/${room.slug}/stream`}
@@ -52,6 +55,15 @@ const oldest = initialMessages[0]?.createdAt ?? null;
       <div class="min-w-0 flex-1">
         <div class="truncate text-base font-semibold text-tc-50">{room.name}</div>
       </div>
+      <button
+        type="button"
+        id="mentionNotifyBtn"
+        class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+        title="Enable browser notifications when you are @mentioned"
+        aria-label="Enable mention notifications"
+      >
+        <span class="text-base" aria-hidden="true">🔔</span>
+      </button>
       <button
         id="themeToggle"
         onclick="toggleTheme()"
@@ -177,19 +189,27 @@ const oldest = initialMessages[0]?.createdAt ?? null;
           hx-on:messageSent="this.reset(); const t=this.querySelector('textarea[name=body]'); if(t){t.dispatchEvent(new Event('input'));}"
           hx-on:htmx:afterRequest="if(event.detail.successful){this.reset(); const t=this.querySelector('textarea[name=body]'); if(t){t.dispatchEvent(new Event('input'));}}"
         >
-          <textarea
-            id="composerInput"
-            name="body"
-            rows="1"
-            required
-            maxlength="2000"
-            class="min-h-[44px] flex-1 resize-none rounded-lg border border-tc-700 bg-tc-950 px-3 py-2 text-sm text-tc-50 outline-none transition-colors placeholder:text-tc-300 focus:border-tc-500"
-            placeholder={`Message as ${nickname}…`}
-            hx-post={`/rooms/${room.slug}/typing`}
-            hx-trigger="keyup changed delay:400ms"
-            hx-swap="none"
-            hx-on:keydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); this.form.requestSubmit();}"
-          ></textarea>
+          <div class="relative flex min-w-0 flex-1 flex-col">
+            <ul
+              id="mentionDropdown"
+              role="listbox"
+              aria-label="Mention suggestions"
+              class="absolute bottom-full left-0 right-0 z-50 mb-1 hidden max-h-48 overflow-y-auto rounded-lg border border-tc-700 bg-tc-900 py-1 shadow-lg"
+            ></ul>
+            <textarea
+              id="composerInput"
+              name="body"
+              rows="1"
+              required
+              maxlength="2000"
+              autocomplete="off"
+              class="min-h-[44px] w-full resize-none rounded-lg border border-tc-700 bg-tc-950 px-3 py-2 text-sm text-tc-50 outline-none transition-colors placeholder:text-tc-300 focus:border-tc-500"
+              placeholder={`Message as ${nickname}…`}
+              hx-post={`/rooms/${room.slug}/typing`}
+              hx-trigger="keyup changed delay:400ms"
+              hx-swap="none"
+            ></textarea>
+          </div>
           <button
             class="h-[44px] rounded-lg bg-tc-500 px-4 text-sm font-medium text-white transition-colors hover:bg-tc-400"
             type="submit"
@@ -271,6 +291,306 @@ const oldest = initialMessages[0]?.createdAt ?? null;
       if (composerInput) {
         composerInput.focus();
       }
+    })();
+  </script>
+
+  <script is:inline>
+    (function () {
+      var app = document.getElementById("chatApp");
+      var ta = document.getElementById("composerInput");
+      var dd = document.getElementById("mentionDropdown");
+      var messagesEl = document.getElementById("messages");
+      if (!app || !ta || !dd || !messagesEl) return;
+
+      var myNick = app.dataset.chatNickname || "";
+      var roomName = app.dataset.roomName || "Talkara";
+      var slug = app.dataset.roomSlug || "";
+
+      function mentionsMe(body, nick) {
+        if (!body || !nick) return false;
+        if (/@everyone\b/i.test(body)) return true;
+        var re = /@([^\s@]+)/g;
+        var m;
+        var nl = nick.toLowerCase();
+        while ((m = re.exec(body))) {
+          if (m[1].toLowerCase() === nl) return true;
+        }
+        return false;
+      }
+
+      function highlightMentionsIn(root) {
+        if (!myNick) return;
+        var nodes = root.querySelectorAll
+          ? root.querySelectorAll(".message-user .msg-body .mention")
+          : [];
+        for (var i = 0; i < nodes.length; i++) {
+          var span = nodes[i];
+          var t = span.textContent || "";
+          span.classList.remove("mention-self");
+          if (t.toLowerCase() === "@everyone") {
+            span.classList.add("mention-self");
+          } else if (t.length > 1 && t.slice(1).toLowerCase() === myNick.toLowerCase()) {
+            span.classList.add("mention-self");
+          }
+        }
+      }
+
+      function notifyIfMentioned(li) {
+        if (!myNick || typeof Notification === "undefined") return;
+        var author = li.getAttribute("data-author");
+        if (author === myNick) return;
+        if (Notification.permission !== "granted") return;
+        var bodyEl = li.querySelector(".msg-body");
+        var text = bodyEl ? bodyEl.textContent || "" : "";
+        if (!mentionsMe(text, myNick)) return;
+        var title = "Mentioned in " + roomName;
+        var preview = (author ? author + ": " : "") + (text.length > 120 ? text.slice(0, 117) + "…" : text);
+        try {
+          new Notification(title, { body: preview, icon: "/logo.svg" });
+        } catch (e) {}
+      }
+
+      function processMessageLi(li) {
+        if (!li || !li.classList || !li.classList.contains("message-user")) return;
+        highlightMentionsIn(li);
+        notifyIfMentioned(li);
+      }
+
+      highlightMentionsIn(messagesEl);
+      messagesEl.querySelectorAll("li.message-user").forEach(processMessageLi);
+
+      var mo = new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          m.addedNodes.forEach(function (node) {
+            if (node.nodeType !== 1) return;
+            if (node.matches && node.matches("li.message-user")) processMessageLi(node);
+            if (node.querySelectorAll) {
+              node.querySelectorAll("li.message-user").forEach(processMessageLi);
+            }
+          });
+        });
+      });
+      mo.observe(messagesEl, { childList: true, subtree: true });
+
+      var notifyBtn = document.getElementById("mentionNotifyBtn");
+      if (notifyBtn) {
+        function syncNotifyUi() {
+          if (typeof Notification === "undefined") {
+            notifyBtn.style.display = "none";
+            return;
+          }
+          var p = Notification.permission;
+          notifyBtn.title =
+            p === "granted"
+              ? "Mention notifications are on"
+              : "Click to enable mention notifications";
+          notifyBtn.setAttribute("aria-pressed", p === "granted" ? "true" : "false");
+        }
+        syncNotifyUi();
+        notifyBtn.addEventListener("click", function () {
+          if (typeof Notification === "undefined") return;
+          Notification.requestPermission().then(syncNotifyUi);
+        });
+      }
+
+      var mentionState = {
+        open: false,
+        at: -1,
+        query: "",
+        selected: 0,
+        list: /** @type {{ kind: string, insert: string, label: string }[]} */ ([]),
+      };
+
+      var namesCache = /** @type {string[] | null} */ (null);
+      var namesFetchedAt = 0;
+      var NAMES_TTL = 8000;
+
+      function fetchOnlineNames(cb) {
+        var now = Date.now();
+        if (namesCache && now - namesFetchedAt < NAMES_TTL) {
+          cb(namesCache);
+          return;
+        }
+        fetch("/rooms/" + encodeURIComponent(slug) + "/online-names", { credentials: "same-origin" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (data) {
+            namesCache = data.names && Array.isArray(data.names) ? data.names : [];
+            namesFetchedAt = Date.now();
+            cb(namesCache);
+          })
+          .catch(function () {
+            cb(namesCache || []);
+          });
+      }
+
+      function getMentionContext(value, cursor) {
+        var before = value.slice(0, cursor);
+        var lastAt = before.lastIndexOf("@");
+        if (lastAt === -1) return null;
+        var afterAt = before.slice(lastAt + 1);
+        if (/\s/.test(afterAt)) return null;
+        if (afterAt.indexOf("@") !== -1) return null;
+        return { start: lastAt, query: afterAt };
+      }
+
+      function buildCandidates(query, names, done) {
+        var q = (query || "").toLowerCase();
+        var out = [];
+        var ev = "everyone";
+        if (q === "" || ev.indexOf(q) === 0) {
+          out.push({ kind: "everyone", insert: "everyone", label: "everyone" });
+        }
+        for (var i = 0; i < names.length; i++) {
+          var n = names[i];
+          if (!n) continue;
+          if (myNick && n.toLowerCase() === myNick.toLowerCase()) continue;
+          if (q !== "" && n.toLowerCase().indexOf(q) !== 0) continue;
+          if (n.toLowerCase() === "everyone") continue;
+          out.push({ kind: "user", insert: n, label: n });
+        }
+        done(out);
+      }
+
+      function renderDropdown() {
+        dd.innerHTML = "";
+        if (!mentionState.open || mentionState.list.length === 0) {
+          dd.classList.add("hidden");
+          return;
+        }
+        dd.classList.remove("hidden");
+        for (var i = 0; i < mentionState.list.length; i++) {
+          var item = mentionState.list[i];
+          var li = document.createElement("li");
+          li.setAttribute("role", "option");
+          li.setAttribute("data-idx", String(i));
+          li.tabIndex = -1;
+          li.className =
+            "cursor-pointer px-3 py-1.5 text-sm text-tc-100 " +
+            (i === mentionState.selected ? "bg-tc-700" : "hover:bg-tc-800");
+          li.textContent = "@" + item.label + (item.kind === "everyone" ? " (all)" : "");
+          li.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            pickMention(Number(li.getAttribute("data-idx")));
+          });
+          dd.appendChild(li);
+        }
+      }
+
+      function closeMention() {
+        mentionState.open = false;
+        mentionState.at = -1;
+        mentionState.list = [];
+        dd.classList.add("hidden");
+        dd.innerHTML = "";
+      }
+
+      function openMention(ctx) {
+        mentionState.at = ctx.start;
+        mentionState.query = ctx.query;
+        mentionState.selected = 0;
+        fetchOnlineNames(function (names) {
+          buildCandidates(ctx.query, names, function (list) {
+            if (list.length === 0) {
+              closeMention();
+              return;
+            }
+            mentionState.list = list;
+            mentionState.open = true;
+            renderDropdown();
+          });
+        });
+      }
+
+      function refreshMention() {
+        var v = ta.value;
+        var c = ta.selectionStart != null ? ta.selectionStart : v.length;
+        var ctx = getMentionContext(v, c);
+        if (!ctx) {
+          closeMention();
+          return;
+        }
+        if (!mentionState.open || mentionState.at !== ctx.start) {
+          openMention(ctx);
+        } else {
+          mentionState.query = ctx.query;
+          fetchOnlineNames(function (names) {
+            buildCandidates(ctx.query, names, function (list) {
+              mentionState.list = list;
+              if (list.length === 0) {
+                closeMention();
+                return;
+              }
+              mentionState.selected = Math.min(mentionState.selected, list.length - 1);
+              mentionState.open = true;
+              renderDropdown();
+            });
+          });
+        }
+      }
+
+      function pickMention(idx) {
+        if (!mentionState.open || idx < 0 || idx >= mentionState.list.length) return;
+        var choice = mentionState.list[idx];
+        var v = ta.value;
+        var c = ta.selectionStart != null ? ta.selectionStart : v.length;
+        var insert = "@" + choice.insert + " ";
+        var newVal = v.slice(0, mentionState.at) + insert + v.slice(c);
+        ta.value = newVal;
+        var pos = mentionState.at + insert.length;
+        ta.setSelectionRange(pos, pos);
+        ta.focus();
+        closeMention();
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      ta.addEventListener("input", function () {
+        refreshMention();
+      });
+
+      ta.addEventListener("keydown", function (e) {
+        if (mentionState.open && mentionState.list.length > 0) {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            mentionState.selected = Math.min(mentionState.selected + 1, mentionState.list.length - 1);
+            renderDropdown();
+            return;
+          }
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            mentionState.selected = Math.max(mentionState.selected - 1, 0);
+            renderDropdown();
+            return;
+          }
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            pickMention(mentionState.selected);
+            return;
+          }
+          if (e.key === "Tab") {
+            e.preventDefault();
+            pickMention(mentionState.selected);
+            return;
+          }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            closeMention();
+            return;
+          }
+        }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          ta.form && ta.form.requestSubmit();
+        }
+      });
+
+      ta.addEventListener("blur", function () {
+        setTimeout(function () {
+          if (document.activeElement && dd.contains(document.activeElement)) return;
+          closeMention();
+        }, 150);
+      });
     })();
   </script>
 </Layout>

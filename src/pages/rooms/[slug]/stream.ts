@@ -6,7 +6,7 @@ import { getClientId, getNickname } from "../../../server/cookies";
 import { getRoomBySlug } from "../../../server/rooms";
 import { broadcast } from "../../../server/hub";
 import { renderMessageLi } from "../../../server/render";
-import { presenceJoin, presenceLeave, renderPresenceOob } from "../../../server/presence";
+import { presenceJoin, presenceLeave, presenceTouch, renderPresenceOob } from "../../../server/presence";
 
 export const prerender = false;
 
@@ -43,6 +43,9 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
       };
 
       const unsubscribe = subscribe(room.id, (evt) => {
+        if (evt.type === "message" && evt.excludeClientId != null && evt.excludeClientId === clientId) {
+          return;
+        }
         safeEnqueue(sseEvent(evt.type, evt.html));
       });
 
@@ -62,8 +65,9 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
         { type: "message", html: renderMessageLi({ nickname: joinInserted[0]!.nickname, body: joinInserted[0]!.body, createdAt: joinInserted[0]!.createdAt, kind: "system" }) },
       );
 
-      // Keepalive ping to prevent proxies closing connection
+      // Keepalive ping + refresh presence last-seen so cleanupStale() does not drop live SSE clients (~30s TTL).
       const interval = setInterval(() => {
+        presenceTouch(room.id, clientId);
         safeEnqueue(`event: ping\ndata: ${Date.now()}\n\n`);
       }, 15000);
 

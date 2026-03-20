@@ -180,6 +180,32 @@ This file is updated at the end of each phase to record what changed, how to run
   - Broadcasts `roomsUpdated` event after deletion to refresh all clients
 - Files changed: `src/server/rooms.ts`, `src/pages/rooms/[slug]/delete.ts`, `src/pages/rooms/[slug].astro`
 
+## @mentions (completed 2026-03-20)
+
+### Behaviour
+- Composer: type `@` then letters to filter **online** users in the current room (prefix match, case-insensitive). `@everyone` appears as **@everyone (all)** and inserts `@everyone `.
+- Keyboard: **↑/↓** to move selection, **Enter** or **Tab** to insert, **Esc** to close. **Shift+Enter** still inserts a newline; **Enter** sends when the dropdown is closed.
+- The dropdown excludes your own nickname from the list (you can still type `@YourName` manually).
+- Messages: server wraps `@everyone` (word boundary) and `@non-whitespace tokens` in `<span class="mention">`; client adds `mention-self` when the token is you or `@everyone`.
+- Notifications: optional **Notification** API — bell button in the header requests permission; alerts fire for incoming messages from other users whose text matches `@<your nickname>` (case-insensitive) or `@everyone`.
+
+### Files
+| File | Change |
+|------|--------|
+| `src/server/render.ts` | `renderBodyWithMentions`, `message-user` / `msg-body` markup, `data-author` |
+| `src/server/presence.ts` | `listOnlineNicknames()` |
+| `src/pages/rooms/[slug]/online-names.ts` | `GET` JSON for mention autocomplete |
+| `src/pages/rooms/[slug].astro` | Dropdown UI, composer wrapper, mention + notification scripts, bell button |
+| `src/styles/global.css` | `.mention` / `.mention-self` |
+
+### Presence TTL + mention list (fix 2026-03-20)
+- **Bug**: Online nicknames for `@` autocomplete come from `listOnlineNicknames`, which runs `cleanupStale` (30s). `lastSeenMs` was only set on SSE connect, so after ~30s connected users were dropped from the map while the presence panel DOM could still look full until the next broadcast — autocomplete showed only `@everyone`.
+- **Fix**: Call `presenceTouch(roomId, clientId)` on each SSE keepalive ping (`stream.ts`, same interval as `ping`).
+
+### Duplicate message for sender (fix 2026-03-20)
+- **Bug**: The sender saw each new line twice: `POST /messages` returns HTML with `hx-swap-oob` to `#messages`, and the same HTML was broadcast over SSE to all tabs including the sender’s — second OOB append.
+- **Fix**: `RoomEvent` message payloads may include `excludeClientId`; the SSE subscriber in `stream.ts` skips those events when `excludeClientId === clientId`. `messages.ts` passes the poster’s `clientId` from cookies.
+
 ## Notes / future improvements
 - (none currently tracked here)
 

@@ -55,11 +55,18 @@ Astro dev server runs at `http://localhost:4321` by default.
 - **Multi-room chat** — Create rooms, join any room, and chat in real-time
 - **Live presence** — See who's online in each room with green status indicators
 - **Typing indicators** — Know when someone is typing
+- **@mentions** — Type `@` in the composer to pick from online users (prefix match), or choose `@everyone` to ping the room. Arrow keys move the selection; **Enter** or **Tab** inserts. Mentions render with accent color; mentions that include you (including `@everyone`) are underlined. **Browser notifications** for mentions are optional: click the bell (🔔) in the room header to grant permission, then you get a desktop notification when someone else’s message mentions you.
 - **Theme switching** — Toggle between talkara_classic (dark) and talkara_light themes
 - **Logout** — Click Logout in the header to return to the nickname picker
 - **Delete rooms** — Delete any room (except Lobby) from the room header
 - **Auto-focus input** — Chat input is automatically focused when joining a room
 - **Responsive layout** — Works on desktop, tablet, and mobile with adaptive sidebars
+
+### Mention API (for developers)
+
+- `GET /rooms/:slug/online-names` — JSON `{ "names": string[] }` of deduplicated online nicknames for that room (same source as the presence panel). Requires a valid session cookie.
+
+Server-rendered message bodies wrap `@token` and `@everyone` in `<span class="mention">` (see `src/server/render.ts` — `renderBodyWithMentions`).
 
 ## Project log
 

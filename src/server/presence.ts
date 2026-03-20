@@ -60,12 +60,12 @@ export function presenceTouch(roomId: string, clientId: string) {
   if (entry) entry.lastSeenMs = Date.now();
 }
 
-export function renderPresenceOob(roomId: string): string {
+/** Sorted, deduplicated online nicknames for a room (same rules as the presence panel). */
+export function listOnlineNicknames(roomId: string): string[] {
   cleanupStale(roomId);
   const room = getRoom(roomId);
-  // Deduplicate nicknames while preserving order
   const seen = new Set<string>();
-  const names = Array.from(room.values())
+  return Array.from(room.values())
     .filter((p) => {
       if (seen.has(p.nickname)) return false;
       seen.add(p.nickname);
@@ -73,6 +73,10 @@ export function renderPresenceOob(roomId: string): string {
     })
     .map((p) => p.nickname)
     .sort((a, b) => a.localeCompare(b));
+}
+
+export function renderPresenceOob(roomId: string): string {
+  const names = listOnlineNicknames(roomId);
 
   const items =
     names.length === 0

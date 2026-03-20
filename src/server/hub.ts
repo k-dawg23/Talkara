@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 
 type RoomEvent =
-  | { type: "message"; html: string }
+  | { type: "message"; html: string; excludeClientId?: string }
   | { type: "presence"; html: string }
   | { type: "typing"; html: string }
   | { type: "roomsUpdated"; html: string };

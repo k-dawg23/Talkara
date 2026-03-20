@@ -95,3 +95,13 @@
     border-left: 1px solid var(--color-tc-800);
   }
 }
+
+/* @mentions in message bodies */
+.msg-body .mention {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.msg-body .mention.mention-self {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
