@@ -56,28 +56,52 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+/** True when curr is a user message that continues the same author's previous user message (no system line between). */
+export function isUserMessageContinuation(
+  prev: { kind: string; nickname: string } | null | undefined,
+  curr: { kind: string; nickname: string },
+): boolean {
+  if (curr.kind !== "user") return false;
+  if (!prev || prev.kind !== "user") return false;
+  return prev.nickname.trim() === curr.nickname.trim();
+}
+
+function avatarLetter(nickname: string): string {
+  const t = nickname.trim();
+  if (!t) return "?";
+  const ch = t[0];
+  return ch ? ch.toUpperCase() : "?";
+}
+
 export function renderMessageLi(opts: {
   nickname: string;
   body: string;
   createdAt?: Date;
   kind?: "user" | "system";
+  /** Same author as previous user message (no system in between). */
+  continuation?: boolean;
 }): string {
   const kind = opts.kind ?? "user";
   const createdAt = opts.createdAt ?? new Date();
   const time = createdAt.toISOString();
   const timeStr = createdAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
   const dateStr = formatDate(createdAt);
-  
+
   if (kind === "system") {
-    return `<li hx-swap-oob="beforeend:#messages" class="message-system my-2 text-center text-xs text-tc-300">${escapeHtml(opts.body)} <span class="text-tc-400">${dateStr} ${timeStr}</span></li>`;
+    return `<li class="message-system my-2 text-center text-xs text-tc-300">${escapeHtml(opts.body)} <span class="text-tc-400">${dateStr} ${timeStr}</span></li>`;
   }
 
   const authorAttr = escapeHtmlAttr(opts.nickname);
+  const continuation = opts.continuation ?? false;
+  const letter = escapeHtml(avatarLetter(opts.nickname));
+  const groupClass = continuation ? "message-user message-continue" : "message-user message-start";
+
   return `
-<li hx-swap-oob="beforeend:#messages" class="message-user group my-2 flex gap-3" data-author="${authorAttr}">
+<li class="${groupClass} flex gap-3" data-author="${authorAttr}">
+  <div class="message-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tc-700 text-xs font-semibold text-tc-50" aria-hidden="true">${letter}</div>
   <div class="min-w-0 flex-1">
-    <div class="flex items-baseline gap-2">
-      <div class="text-sm font-semibold text-tc-50">${escapeHtml(opts.nickname)}</div>
+    <div class="message-meta flex flex-wrap items-baseline gap-2">
+      <span class="text-sm font-semibold text-tc-50">${escapeHtml(opts.nickname)}</span>
       <time class="text-xs text-tc-300" datetime="${time}">${dateStr} ${timeStr}</time>
     </div>
     <div class="msg-body whitespace-pre-wrap text-sm text-tc-100">${renderBodyWithMentions(opts.body)}</div>

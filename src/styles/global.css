@@ -105,3 +105,19 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Grouped user messages: hide avatar + meta on continuations (still in DOM for regroupMessages) */
+#messages .message-user.message-start {
+  margin-top: 0.625rem;
+  margin-bottom: 0.125rem;
+}
+#messages .message-user.message-continue {
+  margin-top: 0.125rem;
+  margin-bottom: 0.125rem;
+}
+#messages .message-user.message-continue .message-meta {
+  display: none;
+}
+#messages .message-user.message-continue .message-avatar {
+  visibility: hidden;
+}

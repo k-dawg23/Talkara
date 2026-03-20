@@ -1,11 +1,12 @@
 ---
+import { Fragment } from "astro/jsx-runtime";
 import Layout from "../../layouts/Layout.astro";
 import { getNickname, getOrSetClientId } from "../../server/cookies";
 import { getOrCreateLobby, getRoomBySlug, listRooms } from "../../server/rooms";
 import { db } from "../../db/client";
 import { messages } from "../../db/schema";
 import { eq, desc, and, ne } from "drizzle-orm";
-import { renderMessageLi } from "../../server/render";
+import { renderMessageLi, isUserMessageContinuation } from "../../server/render";
 
 export const prerender = false;
 
@@ -152,7 +153,9 @@ const oldest = initialMessages[0]?.createdAt ?? null;
 
         <ol
           id="messages"
-          class="flex-1 overflow-y-auto px-3 py-3"
+          class="list-none flex flex-1 flex-col overflow-y-auto px-3 py-3"
+          sse-swap="message"
+          hx-swap="beforeend"
         >
           <li
             id="historySentinel"
@@ -166,24 +169,21 @@ const oldest = initialMessages[0]?.createdAt ?? null;
           {initialMessages.length === 0 ? (
             <li class="text-sm text-tc-300">No messages yet.</li>
           ) : (
-            initialMessages.map((m) => (
-              <Fragment set:html={renderMessageLi({ nickname: m.nickname, body: m.body, createdAt: m.createdAt, kind: m.kind })} />
-            ))
+            initialMessages.map((m, i) => {
+              const prev = i > 0 ? initialMessages[i - 1] : null;
+              const continuation = m.kind === "user" ? isUserMessageContinuation(prev ?? undefined, m) : false;
+              return (
+                <Fragment set:html={renderMessageLi({ nickname: m.nickname, body: m.body, createdAt: m.createdAt, kind: m.kind, continuation })} />
+              );
+            })
           )}
         </ol>
-
-        <div
-          id="sseSink"
-          class="hidden"
-          sse-swap="message"
-          hx-swap="beforeend"
-        ></div>
 
         <form
           id="composerForm"
           class="flex shrink-0 items-end gap-2 border-t border-tc-800 p-3"
           hx-post={`/rooms/${room.slug}/messages`}
-          hx-target="#sseSink"
+          hx-target="#messages"
           hx-swap="beforeend"
           hx-on:submit="setTimeout(()=>{const t=document.getElementById('composerInput'); if(t){t.value=''; t.dispatchEvent(new Event('input',{bubbles:true}));}},0)"
           hx-on:messageSent="this.reset(); const t=this.querySelector('textarea[name=body]'); if(t){t.dispatchEvent(new Event('input'));}"
@@ -356,11 +356,46 @@ const oldest = initialMessages[0]?.createdAt ?? null;
         notifyIfMentioned(li);
       }
 
+      function regroupMessages() {
+        var ol = document.getElementById("messages");
+        if (!ol) return;
+        var prev = null;
+        for (var i = 0; i < ol.children.length; i++) {
+          var li = ol.children[i];
+          if (li.id === "historySentinel") continue;
+          if (li.classList.contains("message-system")) {
+            prev = null;
+            continue;
+          }
+          if (!li.classList.contains("message-user")) {
+            prev = null;
+            continue;
+          }
+          var author = (li.getAttribute("data-author") || "").trim();
+          var prevAuthor = prev ? (prev.getAttribute("data-author") || "").trim() : "";
+          var cont = !!(prev && prevAuthor === author);
+          li.classList.toggle("message-continue", cont);
+          li.classList.toggle("message-start", !cont);
+          prev = li;
+        }
+      }
+
       highlightMentionsIn(messagesEl);
       messagesEl.querySelectorAll("li.message-user").forEach(processMessageLi);
 
+      var regroupT = null;
+      function scheduleRegroup() {
+        if (regroupT) clearTimeout(regroupT);
+        regroupT = setTimeout(function () {
+          regroupT = null;
+          regroupMessages();
+        }, 50);
+      }
+
       var mo = new MutationObserver(function (muts) {
+        var childChanged = false;
         muts.forEach(function (m) {
+          if (m.type === "childList" && m.target === messagesEl) childChanged = true;
           m.addedNodes.forEach(function (node) {
             if (node.nodeType !== 1) return;
             if (node.matches && node.matches("li.message-user")) processMessageLi(node);
@@ -369,8 +404,16 @@ const oldest = initialMessages[0]?.createdAt ?? null;
             }
           });
         });
+        if (childChanged) scheduleRegroup();
       });
       mo.observe(messagesEl, { childList: true, subtree: true });
+
+      document.body.addEventListener("htmx:afterSwap", function (evt) {
+        var t = evt.detail && evt.detail.target;
+        if (t && (t.id === "messages" || t.id === "historySentinel")) {
+          scheduleRegroup();
+        }
+      });
 
       var notifyBtn = document.getElementById("mentionNotifyBtn");
       if (notifyBtn) {
