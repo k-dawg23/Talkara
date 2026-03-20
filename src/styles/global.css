@@ -121,3 +121,14 @@
 #messages .message-user.message-continue .message-avatar {
   visibility: hidden;
 }
+
+/* User avatar fills use inline background-color; ring works on light + dark chat backgrounds */
+#messages .message-user .message-avatar {
+  border: 1px solid rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.avatar-color-dot {
+  border: 1px solid rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}

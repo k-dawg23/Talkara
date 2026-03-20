@@ -223,6 +223,34 @@ This file is updated at the end of each phase to record what changed, how to run
 - **Fix (second pass)**: Run `regroupMessages()` **only** on **`htmx:oobAfterSwap`** when `evt.detail.target.id === 'messages'` — still wrong for live inserts because chat rows were not reliably going through that path.
 - **Fix (third pass)**: Stop using `hx-swap-oob` on chat `<li>` in `renderMessageLi`. Put `sse-swap="message"` + `hx-swap="beforeend"` on `#messages` and `hx-target="#messages"` on the composer so POST and SSE append the same plain fragment as SSR. Presence/typing still use OOB to their panels. Client: debounced `regroupMessages()` on direct children of `#messages` and `htmx:afterSwap` when target is `#messages` or `#historySentinel`. Trim nicknames when comparing authors (server + client).
 
+## Per-user avatar colours (completed 2026-03-20)
+
+### Behaviour
+- **`src/server/avatar-colors.ts`**: Curated saturated palette (white initials, readable on both themes). **`getOrAssignSessionAvatarColor(clientId)`** picks a random palette entry on first use per connection; **`releaseSessionAvatarColor`** clears it on disconnect or when a duplicate nickname evicts another tab. **`getAvatarColorForNickname(nickname)`** is a stable hash into the same palette when no live session is available (offline / not in presence).
+- **Presence** (`presenceJoin` / `presenceLeave`, duplicate-nick eviction): assigns or releases session colours so they stay consistent across rooms until the session ends.
+- **Message avatars** (`renderMessageLi`): optional `avatarBg`; inline `background-color` plus **`global.css`** rules on `.message-avatar` — dark outer border + light inset edge so circles stay visible on light and dark chat backgrounds.
+- **Online panel**: Replaced generic green dots with **`.avatar-color-dot`** using the same session colour as that user’s `clientId` (dedupe-by-nickname logic unchanged).
+
+### Aligning online list with message bubbles (fix 2026-03-20)
+- **Issue**: The sidebar used **session** colours from presence, while SSR and history used only the **nickname hash**, so colours often **did not match** for people who were online.
+- **Fix**: **`getAvatarColorForDisplay(roomId, nickname, opts?)`** in `presence.ts`:
+  - If the message author matches the **viewer’s nickname** and **`viewerClientId`** is set, use **`getOrAssignSessionAvatarColor`** so the viewer’s own rows match **before** SSE connects (SSR/history).
+  - Else if that nickname appears in the room **presence** map, use that **`clientId`**’s session colour (same as the online dot).
+  - Else fall back to **`getAvatarColorForNickname`**.
+- **Call sites**: `rooms/[slug].astro` (initial messages), `history.ts` (prepend), and `messages.ts` (POST/broadcast) all use **`getAvatarColorForDisplay`** so resolution is single-sourced.
+
+### Files
+| File | Change |
+|------|--------|
+| `src/server/avatar-colors.ts` | New — palette, session map on `globalThis`, hash fallback |
+| `src/server/presence.ts` | Join/leave/eviction hooks; `getAvatarColorForDisplay`; coloured presence OOB |
+| `src/server/render.ts` | `avatarBg` on user messages; white initials |
+| `src/pages/rooms/[slug].astro` | Pass `viewerClientId` / `viewerNickname` into display helper |
+| `src/pages/rooms/[slug]/history.ts` | Same for prepended history rows |
+| `src/pages/rooms/[slug]/messages.ts` | Uses `getAvatarColorForDisplay` for POST HTML |
+| `src/styles/global.css` | `.message-avatar` + `.avatar-color-dot` borders |
+| `README.md` | Feature note |
+
 ## Notes / future improvements
 - (none currently tracked here)
 
