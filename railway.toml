@@ -2,10 +2,9 @@
 # PORT is injected by Railway; Astro @astrojs/node reads PORT + HOST at runtime.
 
 [build]
-builder = "nixpacks"
-# Nixpacks already runs `npm ci` in the install phase. Do not run `npm ci` again here — a second
-# `npm ci` hits EBUSY on `/app/node_modules/.cache` (Railway/Nixpacks cache mount).
-buildCommand = "npm run build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+# Dockerfile pins Node 22 (Astro 6). Nixpacks ignored NIXPACKS_NODE_VERSION / used Node 18 on some deploys.
 
 [deploy]
 startCommand = "npm start"

@@ -75,7 +75,7 @@ This repo includes **`.cursor/mcp.json`** so Cursor can run the official **`@rai
 3. **Link Postgres to the app service:** open the web service → **Variables** → **Add reference** → choose the Postgres plugin’s **`DATABASE_URL`** (use the **internal** URL for traffic that stays inside Railway).
 4. Ensure **build** runs `npm run build` after Nixpacks’ install (`npm ci`) and **start** runs `npm start` (see `railway.toml` and `nixpacks.toml`). **Redeploy** after variables are set.
 
-   **Node version:** Astro 6 needs `^20.19.1` or `>=22.12.0`. Nixpacks’ default Node **22** is often **22.11**, which fails — `nixpacks.toml` sets **`NIXPACKS_NODE_VERSION = "23"`**. To use **Node 20 LTS** instead, set that variable to **`20`** in Railway or in `nixpacks.toml`.
+   **Node version:** Production on Railway uses the root **`Dockerfile`** (`node:22-bookworm-slim`) so Astro’s engine check is satisfied. Nixpacks alone was unreliable (wrong majors: 18 / 22.11). Optional **`nixpacks.toml`** is for non-Docker Nixpacks deploys only.
 
    **If builds still show `RUN npm ci && npm run build` and fail with `EBUSY` on `node_modules/.cache`:**
    - **Push the latest commit** from this repo (so `package.json` engines and `railway.toml` / `nixpacks.toml` are on GitHub).

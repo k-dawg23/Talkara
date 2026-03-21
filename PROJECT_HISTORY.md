@@ -292,3 +292,7 @@ This file is updated at the end of each phase to record what changed, how to run
 ### Operator notes
 - From `Talkara/`: `npx railway login`, `railway init` or `railway link`, add Postgres, reference **`DATABASE_URL`**, then **`npx railway up`** or GitHub-triggered deploys.
 
+### Dockerfile on Railway (follow-up)
+- Nixpacks kept picking **Node 18** or **22.11** despite `NIXPACKS_NODE_VERSION`; Astro 6 requires **`^20.19.1 || >=22.12.0`**.
+- Added root **`Dockerfile`** (`node:22-bookworm-slim`), **`.dockerignore`**, and **`railway.toml`** `builder = "DOCKERFILE"` so builds use a pinned Node image.
+

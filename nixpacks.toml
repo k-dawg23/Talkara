@@ -1,3 +1,5 @@
+# Optional — only used if you deploy with Nixpacks (no Dockerfile). Railway uses Dockerfile when present.
+#
 # Nixpacks runs the Node install phase (`npm ci`) separately from the build phase.
 # Do NOT put `npm ci` in the build phase — Railway’s cache mount on `node_modules/.cache`
 # causes: EBUSY: resource busy or locked, rmdir '/app/node_modules/.cache'
