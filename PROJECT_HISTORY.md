@@ -277,3 +277,18 @@ This file is updated at the end of each phase to record what changed, how to run
   - On room creation, server broadcasts an SSE `roomsUpdated` event to all connected tabs.
   - Tabs refresh the rooms list via `GET /rooms/list?current=<slug>` with `hx-trigger="sse:roomsUpdated"` (no refresh needed).
 
+## Railway deployment (completed 2026-03-21)
+
+### What changed
+- **`astro.config.mjs`:** `server.host: true` so standalone Node listens on **0.0.0.0**; **`PORT`** still comes from the environment (Railway injects it).
+- **`package.json`:** `start` runs **`npm run db:migrate`** then **`node ./dist/server/entry.mjs`**.
+- **`src/db/client.ts`:** TLS for non-localhost Postgres URLs (Railway/managed DB).
+- **`src/pages/rooms/[slug]/stream.ts`:** **`X-Accel-Buffering: no`** for SSE through reverse proxies.
+- **`src/server/cookies.ts`:** **`secure` cookies** in production (HTTPS on Railway).
+- **`railway.toml`:** build (`npm ci && npm run build`) + deploy (`npm start`).
+- **`.cursor/mcp.json`:** Railway MCP (`npx -y @railway/mcp-server`); **`@railway/cli`** in devDependencies for `npx railway`.
+- **`README.md`:** Deploy steps (Postgres plugin, `DATABASE_URL` reference, SSE notes).
+
+### Operator notes
+- From `Talkara/`: `npx railway login`, `railway init` or `railway link`, add Postgres, reference **`DATABASE_URL`**, then **`npx railway up`** or GitHub-triggered deploys.
+

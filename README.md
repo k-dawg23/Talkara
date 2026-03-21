@@ -73,7 +73,11 @@ This repo includes **`.cursor/mcp.json`** so Cursor can run the official **`@rai
 1. In the [Railway dashboard](https://railway.app) (or CLI): **New project** → add **PostgreSQL**. Wait until the database is running.
 2. **New service** → **GitHub repo** → select **Talkara** (or **Empty service** and connect the repo / use `railway up` from this directory).
 3. **Link Postgres to the app service:** open the web service → **Variables** → **Add reference** → choose the Postgres plugin’s **`DATABASE_URL`** (use the **internal** URL for traffic that stays inside Railway).
-4. Ensure **build** runs `npm run build` after Nixpacks’ install (`npm ci`) and **start** runs `npm start` (see `railway.toml`). **Redeploy** after variables are set. (Do not put `npm ci` in the custom build command — it runs twice on Railway and can fail with `EBUSY` on `node_modules/.cache`.)
+4. Ensure **build** runs `npm run build` after Nixpacks’ install (`npm ci`) and **start** runs `npm start` (see `railway.toml` and `nixpacks.toml`). **Redeploy** after variables are set.
+
+   **If builds still show `RUN npm ci && npm run build` and fail with `EBUSY` on `node_modules/.cache`:**
+   - **Push the latest commit** from this repo (so `package.json` engines and `railway.toml` / `nixpacks.toml` are on GitHub).
+   - In Railway: open the **web** service → **Settings** → **Build** → **Custom Build Command**. It must be **empty** (use repo config) or **exactly** `npm run build` — **not** `npm ci && npm run build`. A value saved here overrides `railway.toml`.
 5. **Generate a public URL:** service → **Settings** → **Networking** → **Generate domain**.
 
 Migrations run on each deploy when the container starts (`npm start`). If you need migrations during build instead, change the Railway **Build** command in the dashboard (and keep `DATABASE_URL` available to the build — Railway can expose plugin variables to builds).

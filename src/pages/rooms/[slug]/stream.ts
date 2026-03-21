@@ -107,6 +107,8 @@ export const GET: APIRoute = async ({ params, cookies, redirect, request }) => {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      // Hint reverse proxies (nginx-style + some CDNs) not to buffer the stream
+      "X-Accel-Buffering": "no",
     },
   });
 };

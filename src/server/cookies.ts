@@ -11,9 +11,11 @@ export function getOrSetClientId(cookies: AstroCookies): string {
   if (existing) return existing;
 
   const id = randomUUID();
+  const secure = import.meta.env.PROD;
   cookies.set("clientId", id, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
@@ -26,9 +28,11 @@ export function getClientId(cookies: AstroCookies): string | null {
 }
 
 export function setNickname(cookies: AstroCookies, nickname: string) {
+  const secure = import.meta.env.PROD;
   cookies.set("nickname", nickname, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
