@@ -49,6 +49,43 @@ Astro dev server runs at `http://localhost:4321` by default.
 
 - `npm run db:generate` — generate SQL migrations from `src/db/schema.ts`
 - `npm run db:migrate` — apply migrations to the configured `DATABASE_URL`
+- `npm run build` — production SSR build (`dist/`)
+- `npm start` — run migrations, then start the Astro Node standalone server (`PORT` / `HOST` from env; see below)
+
+## Deploy on Railway (Postgres + Node)
+
+Talkara uses **Astro `@astrojs/node` in standalone mode**: the server reads **`PORT`** (Railway sets this automatically) and **`HOST`** (defaults to **0.0.0.0** when `server.host` is `true` in `astro.config.mjs`). **`npm start`** runs **`drizzle-kit migrate`** then **`node ./dist/server/entry.mjs`**.
+
+### Railway CLI
+
+Install and log in (pick one):
+
+- **npm (project-local):** `npx @railway/cli login` (after `npm install`, the CLI is in `devDependencies`)
+- **Global:** `npm i -g @railway/cli` then `railway login`
+- **Other installers:** [Railway CLI docs](https://docs.railway.com/guides/cli)
+
+### Railway MCP (Cursor)
+
+This repo includes **`.cursor/mcp.json`** so Cursor can run the official **`@railway/mcp-server`** via `npx`. You still need the CLI installed and authenticated (`railway login`) for MCP tools to work.
+
+### One-time project setup
+
+1. In the [Railway dashboard](https://railway.app) (or CLI): **New project** → add **PostgreSQL**. Wait until the database is running.
+2. **New service** → **GitHub repo** → select **Talkara** (or **Empty service** and connect the repo / use `railway up` from this directory).
+3. **Link Postgres to the app service:** open the web service → **Variables** → **Add reference** → choose the Postgres plugin’s **`DATABASE_URL`** (use the **internal** URL for traffic that stays inside Railway).
+4. Ensure **build** runs `npm run build` after Nixpacks’ install (`npm ci`) and **start** runs `npm start` (see `railway.toml`). **Redeploy** after variables are set. (Do not put `npm ci` in the custom build command — it runs twice on Railway and can fail with `EBUSY` on `node_modules/.cache`.)
+5. **Generate a public URL:** service → **Settings** → **Networking** → **Generate domain**.
+
+Migrations run on each deploy when the container starts (`npm start`). If you need migrations during build instead, change the Railway **Build** command in the dashboard (and keep `DATABASE_URL` available to the build — Railway can expose plugin variables to builds).
+
+### SSE (live chat) behind Railway’s proxy
+
+The chat stream (`/rooms/:slug/stream`) sets **`Cache-Control: no-cache, no-transform`**, **`Connection: keep-alive`**, and **`X-Accel-Buffering: no`**. Long-lived connections may still be subject to **idle timeouts** at the edge; the app sends **ping events every 15s** to help keep the stream alive.
+
+### Local env vs Railway
+
+- **Local Postgres (Docker):** keep `DATABASE_URL` pointing at `localhost`; `src/db/client.ts` does **not** enable TLS for typical localhost URLs.
+- **Railway Postgres:** use the provided **`DATABASE_URL`**; non-localhost URLs use **`ssl: { rejectUnauthorized: false }`** unless you set **`PGSSLMODE=disable`** or **`DATABASE_SSL=0`** (see `.env.example`).
 
 ## Features
 
