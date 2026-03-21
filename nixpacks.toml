@@ -2,7 +2,13 @@
 # Do NOT put `npm ci` in the build phase — Railway’s cache mount on `node_modules/.cache`
 # causes: EBUSY: resource busy or locked, rmdir '/app/node_modules/.cache'
 #
+# Astro 6 requires `^20.19.1 || >=22.12.0`. Nixpacks’ default Node **22** is often **22.11.x**, which fails.
+# Pin **23** (or **20** for LTS) — majors only; see https://nixpacks.com/docs/providers/node
+#
 # https://nixpacks.com/docs/providers/nodejs
+
+[variables]
+NIXPACKS_NODE_VERSION = "23"
 
 [phases.build]
 cmds = ["npm run build"]
