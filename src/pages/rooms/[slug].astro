@@ -50,51 +50,61 @@ const oldest = initialMessages[0]?.createdAt ?? null;
     hx-ext="sse"
     sse-connect={`/rooms/${room.slug}/stream`}
   >
-    <!-- ─── Header ─── -->
-    <header class="flex shrink-0 items-center gap-3 border-b border-tc-800 bg-tc-900/80 px-4 py-2.5 backdrop-blur">
-      <a href="/rooms/lobby" class="shrink-0">
-        <img src="/logo.svg" alt="Talkara" class="h-8 w-8 rounded-lg" />
-      </a>
-      <div class="min-w-0 flex-1">
-        <div class="truncate text-base font-semibold text-tc-50">{room.name}</div>
+    <!-- ─── Header ───
+         ≤480px: row1 = logo + room name, row2 = notify + theme + nick + logout + delete
+         >480px: single row (unchanged) -->
+    <header
+      class="flex shrink-0 flex-col gap-2 border-b border-tc-800 bg-tc-900/80 px-4 py-2.5 backdrop-blur min-[481px]:flex-row min-[481px]:items-center min-[481px]:gap-3"
+    >
+      <div class="flex min-w-0 items-center gap-3 min-[481px]:min-w-0 min-[481px]:flex-1">
+        <a href="/rooms/lobby" class="shrink-0">
+          <img src="/logo.svg" alt="Talkara" class="h-8 w-8 rounded-lg" />
+        </a>
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-base font-semibold text-tc-50">{room.name}</div>
+        </div>
       </div>
-      <button
-        type="button"
-        id="mentionNotifyBtn"
-        class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
-        title="Enable browser notifications when you are @mentioned"
-        aria-label="Enable mention notifications"
+      <div
+        class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 max-[480px]:w-full max-[480px]:justify-between min-[481px]:shrink-0 min-[481px]:justify-end min-[481px]:gap-2"
       >
-        <span class="text-base" aria-hidden="true">🔔</span>
-      </button>
-      <button
-        id="themeToggle"
-        onclick="toggleTheme()"
-        class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
-        aria-label="Toggle theme"
-      ></button>
-      <a href="/nick" class="shrink-0 text-sm text-tc-200 transition-colors hover:text-tc-50">
-        Change nick
-      </a>
-      <form method="post" action="/api/logout" class="shrink-0">
         <button
-          type="submit"
-          class="rounded-lg p-1.5 text-sm text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+          type="button"
+          id="mentionNotifyBtn"
+          class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+          title="Enable browser notifications when you are @mentioned"
+          aria-label="Enable mention notifications"
         >
-          Logout
+          <span class="text-base" aria-hidden="true">🔔</span>
         </button>
-      </form>
-      {room.slug !== "lobby" && (
-        <form method="post" action={`/rooms/${room.slug}/delete`} class="shrink-0" onsubmit="return confirm('Delete this room?');">
+        <button
+          id="themeToggle"
+          onclick="toggleTheme()"
+          class="shrink-0 rounded-lg p-1.5 text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
+          aria-label="Toggle theme"
+        ></button>
+        <a href="/nick" class="shrink-0 text-sm text-tc-200 transition-colors hover:text-tc-50">
+          Change nick
+        </a>
+        <form method="post" action="/api/logout" class="shrink-0">
           <button
             type="submit"
-            class="rounded-lg p-1.5 text-sm text-red-400 transition-colors hover:bg-red-900/30 hover:text-red-300"
-            title="Delete room"
+            class="rounded-lg p-1.5 text-sm text-tc-200 transition-colors hover:bg-tc-800 hover:text-tc-50"
           >
-            Delete
+            Logout
           </button>
         </form>
-      )}
+        {room.slug !== "lobby" && (
+          <form method="post" action={`/rooms/${room.slug}/delete`} class="shrink-0" onsubmit="return confirm('Delete this room?');">
+            <button
+              type="submit"
+              class="rounded-lg p-1.5 text-sm text-red-400 transition-colors hover:bg-red-900/30 hover:text-red-300"
+              title="Delete room"
+            >
+              Delete
+            </button>
+          </form>
+        )}
+      </div>
     </header>
 
     <!-- ─── Content grid ─── -->
@@ -304,11 +314,27 @@ const oldest = initialMessages[0]?.createdAt ?? null;
 
       if (isMobile()) switchTab('chat');
 
-      // Focus the chat input on page load
-      const composerInput = document.getElementById('composerInput');
-      if (composerInput) {
-        composerInput.focus();
+      function scrollMessagesToBottom() {
+        var el = document.getElementById('messages');
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
       }
+
+      var composerInput = document.getElementById('composerInput');
+      // Show latest messages, then focus composer (order matters on some mobile browsers)
+      function scrollThenFocus() {
+        scrollMessagesToBottom();
+        if (composerInput) composerInput.focus({ preventScroll: true });
+      }
+      requestAnimationFrame(function () {
+        scrollThenFocus();
+        requestAnimationFrame(function () {
+          scrollThenFocus();
+        });
+      });
+      window.addEventListener('load', function () {
+        scrollThenFocus();
+      });
     })();
   </script>
 
