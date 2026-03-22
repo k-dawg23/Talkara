@@ -4,115 +4,113 @@
 
 <h1 align="center">Talkara</h1>
 
+<p align="center"><strong>Multi-room live chat</strong> — pick a nickname, join the lobby, create rooms, and talk in real time with presence, typing hints, and @mentions.</p>
+
+## Overview
+
+Talkara is a browser-based chat app: server-rendered pages, live updates over **Server-Sent Events (SSE)**, and messages stored in **PostgreSQL**. The UI is responsive (desktop columns, mobile tabs) and supports **dark and light** themes.
+
+### Tech stack
+
+| Layer | Technology |
+|--------|------------|
+| **Framework** | [Astro](https://astro.build) 6 (SSR) |
+| **Runtime** | [Node.js](https://nodejs.org) — `@astrojs/node` standalone adapter |
+| **Interactivity** | [HTMX](https://htmx.org) + [htmx-ext-sse](https://github.com/bigskysoftware/htmx-extensions/blob/main/src/sse/README.md) |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com) v4 (`@theme` tokens) |
+| **Database** | [PostgreSQL](https://www.postgresql.org) + [Drizzle ORM](https://orm.drizzle.team) |
+| **Deploy (example)** | [Railway](https://railway.app) — see **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)** |
+
+## Screenshots
+
+Captures are in **`public/Screenprints/`** — filenames indicate **theme** (`Talkara_dark` / `Talkara_light`), **screen** (login, lobby, room, online), and **layout** (fullsize, tablet, mobile, selection).
+
 <p align="center">
-  Multi-room live chat using <strong>Astro SSR + HTMX + SSE + Postgres + Drizzle</strong>, styled with <strong>Tailwind CSS</strong>.
+  <img src="public/Screenprints/Talkara_dark_login.png" alt="Talkara login and nickname — dark theme" width="560" /><br />
+  <em>Login / nickname — dark theme</em>
 </p>
 
-## Themes
+<p align="center">
+  <img src="public/Screenprints/Talkara_dark_lobby_fullsize.png" alt="Lobby — dark theme, desktop" width="720" /><br />
+  <em>Lobby — dark theme, full-width</em>
+</p>
 
-Talkara ships with two switchable themes derived from the logo colour palette:
+<p align="center">
+  <img src="public/Screenprints/Talkara_dark_room_fullsize.png" alt="Room chat — dark theme, desktop" width="720" /><br />
+  <em>Room — dark theme, desktop (rooms, chat, online)</em>
+</p>
 
-| Theme | Description |
-|-------|-------------|
-| **talkara_classic** | Dark navy backgrounds with bright blue accents and yellow-green highlights — the default. |
-| **talkara_light** | Light, airy backgrounds with the same brand blue and a contrast-safe dark gold accent. |
+<p align="center">
+  <img src="public/Screenprints/Talkara_dark_room_mobile.png" alt="Room chat — dark theme, mobile" width="360" /><br />
+  <em>Room — dark theme, mobile</em>
+</p>
 
-Toggle between them using the sun/moon button in the page header (or top-right on login screens). The choice is saved to `localStorage` and respected on reload. First-time visitors get the theme matching their OS `prefers-color-scheme` setting.
-
-## Requirements
-
-- Node.js (see `package.json` engines)
-- Docker + Docker Compose (recommended for Postgres)
-
-## Setup
-
-From the `Talkara/` directory:
-
-1. Start Postgres:
-   - `docker compose up -d`
-
-2. Configure environment:
-   - `cp .env.example .env`
-
-3. Install dependencies:
-   - `npm install`
-
-4. Run DB migrations:
-   - `npm run db:migrate`
-
-5. Run the app:
-   - `npm run dev`
-
-Astro dev server runs at `http://localhost:4321` by default.
-
-## Useful scripts
-
-- `npm run db:generate` — generate SQL migrations from `src/db/schema.ts`
-- `npm run db:migrate` — apply migrations to the configured `DATABASE_URL`
-- `npm run build` — production SSR build (`dist/`)
-- `npm start` — run migrations, then start the Astro Node standalone server (`PORT` / `HOST` from env; see below)
-
-## Deploy on Railway (Postgres + Node)
-
-Talkara uses **Astro `@astrojs/node` in standalone mode**: the server reads **`PORT`** (Railway sets this automatically) and **`HOST`** (defaults to **0.0.0.0** when `server.host` is `true` in `astro.config.mjs`). **`npm start`** runs **`drizzle-kit migrate`** then **`node ./dist/server/entry.mjs`**.
-
-### Railway CLI
-
-Install and log in (pick one):
-
-- **npm (project-local):** `npx @railway/cli login` (after `npm install`, the CLI is in `devDependencies`)
-- **Global:** `npm i -g @railway/cli` then `railway login`
-- **Other installers:** [Railway CLI docs](https://docs.railway.com/guides/cli)
-
-### Railway MCP (Cursor)
-
-This repo includes **`.cursor/mcp.json`** so Cursor can run the official **`@railway/mcp-server`** via `npx`. You still need the CLI installed and authenticated (`railway login`) for MCP tools to work.
-
-### One-time project setup
-
-1. In the [Railway dashboard](https://railway.app) (or CLI): **New project** → add **PostgreSQL**. Wait until the database is running.
-2. **New service** → **GitHub repo** → select **Talkara** (or **Empty service** and connect the repo / use `railway up` from this directory).
-3. **Link Postgres to the app service:** open the web service → **Variables** → **Add reference** → choose the Postgres plugin’s **`DATABASE_URL`** (use the **internal** URL for traffic that stays inside Railway).
-4. Ensure **build** runs `npm run build` after Nixpacks’ install (`npm ci`) and **start** runs `npm start` (see `railway.toml` and `nixpacks.toml`). **Redeploy** after variables are set.
-
-   **Node version:** Production on Railway uses the root **`Dockerfile`** (`node:22-bookworm-slim`) so Astro’s engine check is satisfied. Nixpacks alone was unreliable (wrong majors: 18 / 22.11). Optional **`nixpacks.toml`** is for non-Docker Nixpacks deploys only.
-
-   **If builds still show `RUN npm ci && npm run build` and fail with `EBUSY` on `node_modules/.cache`:**
-   - **Push the latest commit** from this repo (so `package.json` engines and `railway.toml` / `nixpacks.toml` are on GitHub).
-   - In Railway: open the **web** service → **Settings** → **Build** → **Custom Build Command**. It must be **empty** (use repo config) or **exactly** `npm run build` — **not** `npm ci && npm run build`. A value saved here overrides `railway.toml`.
-5. **Generate a public URL:** service → **Settings** → **Networking** → **Generate domain**.
-
-Migrations run on each deploy when the container starts (`npm start`). If you need migrations during build instead, change the Railway **Build** command in the dashboard (and keep `DATABASE_URL` available to the build — Railway can expose plugin variables to builds).
-
-### SSE (live chat) behind Railway’s proxy
-
-The chat stream (`/rooms/:slug/stream`) sets **`Cache-Control: no-cache, no-transform`**, **`Connection: keep-alive`**, and **`X-Accel-Buffering: no`**. Long-lived connections may still be subject to **idle timeouts** at the edge; the app sends **ping events every 15s** to help keep the stream alive.
-
-### Local env vs Railway
-
-- **Local Postgres (Docker):** keep `DATABASE_URL` pointing at `localhost`; `src/db/client.ts` does **not** enable TLS for typical localhost URLs.
-- **Railway Postgres:** use the provided **`DATABASE_URL`**; non-localhost URLs use **`ssl: { rejectUnauthorized: false }`** unless you set **`PGSSLMODE=disable`** or **`DATABASE_SSL=0`** (see `.env.example`).
+<p align="center">
+  <img src="public/Screenprints/Talkara_light_room_fullsize.png" alt="Room chat — light theme, desktop" width="720" /><br />
+  <em>Room — light theme, desktop (compare with dark above)</em>
+</p>
 
 ## Features
 
-- **Multi-room chat** — Create rooms, join any room, and chat in real-time
-- **Live presence** — See who's online in each room with green status indicators
-- **Typing indicators** — Know when someone is typing
-- **@mentions** — Type `@` in the composer to pick from online users (prefix match), or choose `@everyone` to ping the room. Arrow keys move the selection; **Enter** or **Tab** inserts. Mentions render with accent color; mentions that include you (including `@everyone`) are underlined. **Browser notifications** for mentions are optional: click the bell (🔔) in the room header to grant permission, then you get a desktop notification when someone else’s message mentions you.
-- **Avatar colours** — Each connection gets a random saturated avatar colour when they join (SSE/presence); it stays the same in every room until they disconnect. Message bubbles and the online list use the **same** resolution (session colour when that user is in the room’s presence map, or your own cookie on first paint). Users who are **offline** still get a stable hash-based colour in the transcript. Avatars use the same fill in light and dark theme, with a dark outline and light inset edge so circles stay visible on both chat backgrounds.
-- **Grouped messages** — Consecutive messages from the same user are grouped: only the first line shows the circular initial **avatar**, display name, and timestamp; later lines are indented under that block with message text only. A different user’s message or a **system** line (e.g. join/leave) ends the group. **Persisted history** (initial load + scroll-up) shows **user messages only** — old join/leave lines are hidden because the presence panel shows who’s online; **live** join/leave for active sessions still arrives via SSE. Chat `<li>` fragments append directly into `#messages` (POST and SSE use the same `beforeend` target as SSR). The client debounces `regroupMessages()` on `#messages` child-list changes and after history swaps so grouping stays correct live.
-- **Theme switching** — Toggle between talkara_classic (dark) and talkara_light themes
-- **Logout** — Click Logout in the header to return to the nickname picker
-- **Delete rooms** — Delete any room (except Lobby) from the room header
-- **Auto-focus input** — Chat input is automatically focused when joining a room
-- **Responsive layout** — Works on desktop, tablet, and mobile with adaptive sidebars
+- **Multi-room chat** — Lobby plus user-created rooms; room list can refresh live when rooms change.
+- **Real-time messaging** — New messages appear without full page reload (SSE + HTMX).
+- **Scrollback** — Load older messages when you scroll to the top of the thread.
+- **Presence** — See who is online in the current room (with per-user avatar colours).
+- **Typing indicators** — See when others are typing.
+- **@mentions** — Type `@` to pick online users or `@everyone`; mentions are highlighted; optional browser notifications (bell in header).
+- **Avatar colours** — Consistent colours for avatars and presence dots (session-based when online, hash fallback when not).
+- **Grouped messages** — Consecutive lines from the same user are visually grouped.
+- **Themes** — **talkara_classic** (dark) and **talkara_light**; toggle in header / login screens; stored in `localStorage`.
+- **Account** — Change nickname, logout; **delete room** (except Lobby) from the room header.
+- **Responsive layout** — Wide screens: rooms + chat + online; narrow: tabbed panels; header can stack on small widths.
 
-### Mention API (for developers)
+## Themes
 
-- `GET /rooms/:slug/online-names` — JSON `{ "names": string[] }` of deduplicated online nicknames for that room (same source as the presence panel). Requires a valid session cookie.
+| Theme | Description |
+|-------|-------------|
+| **talkara_classic** | Dark navy backgrounds, blue accents, yellow-green highlights (default). |
+| **talkara_light** | Light surfaces, same brand blue, contrast-safe gold accent. |
 
-Server-rendered message bodies wrap `@token` and `@everyone` in `<span class="mention">` (see `src/server/render.ts` — `renderBodyWithMentions`).
+Toggle with the sun/moon control. First visit can follow `prefers-color-scheme`.
 
-## Project log
+## Build & run (local)
 
-See `PROJECT_HISTORY.md` for a phase-by-phase record of what was built and why.
+**Requirements:** Node.js (see `package.json` → `engines`), Docker (for Postgres).
+
+```bash
+cd Talkara
+docker compose up -d          # Postgres
+cp .env.example .env          # set DATABASE_URL if needed
+npm install
+npm run db:migrate
+npm run dev
+```
+
+Dev server: **http://localhost:4321**
+
+**Production-style build:**
+
+```bash
+npm run build
+npm start                     # migrates DB, then serves ./dist/server/entry.mjs
+```
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Astro dev server |
+| `npm run build` | Production SSR build → `dist/` |
+| `npm start` | `drizzle-kit migrate` + Node standalone server (`PORT` / `HOST` from env) |
+| `npm run db:migrate` / `npm run db:generate` | Drizzle migrations |
+
+## Deploy on Railway
+
+See **[RAILWAY_SETUP.md](./RAILWAY_SETUP.md)** for Postgres, web service, `DATABASE_URL`, Docker build, and troubleshooting.
+
+## Developer notes
+
+- **`GET /rooms/:slug/online-names`** — JSON `{ "names": string[] }` for online nicknames (mention autocomplete). Requires session cookie.
+- Message bodies render `@tokens` via `src/server/render.ts` (`renderBodyWithMentions`).
+
+## Project history
+
+Chronological development log: **[PROJECT_HISTORY.md](./PROJECT_HISTORY.md)**
